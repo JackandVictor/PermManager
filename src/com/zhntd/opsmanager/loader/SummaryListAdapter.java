@@ -16,7 +16,7 @@ import com.zhntd.opsmanager.R;
 
 import android.app.AppOpsManager;
 
-public class OpsListAdapter extends BaseAdapter {
+public class SummaryListAdapter extends BaseAdapter {
 
     private List<OpsTemplate> mOpsList;
     private String[] mOpsLabels;
@@ -33,7 +33,7 @@ public class OpsListAdapter extends BaseAdapter {
      * @param opsLabels
      * @param mContext
      */
-    public OpsListAdapter(List<OpsTemplate> opsList, String[] opsCate, String[] opsLabels,
+    public SummaryListAdapter(List<OpsTemplate> opsList, String[] opsCate, String[] opsLabels,
             Context context) {
         this.mOpsList = opsList;
         this.mOpsLabels = opsLabels;
@@ -90,7 +90,7 @@ public class OpsListAdapter extends BaseAdapter {
                 new OpsLoader.AppLoaderCallback() {
 
                     @Override
-                    public void onDetailListLoadFinish(List<AppBean> apps, int count) {
+                    public void onAppsListLoadFinish(List<AppBean> apps, int count) {
                         // TODO make it in res.
                         if (countTextView != null)
                             countTextView.setText(count + "");

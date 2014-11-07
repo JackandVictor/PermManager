@@ -5,7 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.zhntd.opsmanager.OpsTemplate;
+import com.zhntd.opsmanager.utils.Logger;
 
+import android.Manifest;
 import android.content.AsyncTaskLoader;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
@@ -27,7 +29,7 @@ public class OpsLoader {
     }
 
     public interface AppLoaderCallback {
-        void onDetailListLoadFinish(List<AppBean> apps, int count);
+        void onAppsListLoadFinish(List<AppBean> apps, int count);
     }
 
     /**
@@ -36,10 +38,18 @@ public class OpsLoader {
      * @param packageManager
      * @param otl
      * @param callback Must not be null.
-     * @param flag What you want?
+     * @param flag What you want? full list or just a count?
      */
     public void buildAppList(Context context, AppOpsManager appOps,
             PackageManager packageManager, OpsTemplate otl, AppLoaderCallback callback, int flag) {
+        
+        // test part..
+        if (Manifest.permission.INTERNET.equals(otl.getPermName())) {
+            String permission = Manifest.permission.INTERNET;
+            new SpecialPermissionAppsLoader(permission, context, packageManager, callback).execute();
+            return;
+        }
+        
         switch (flag) {
             case FLAG_GET_LIST:
                 new AppListLoader(context, appOps, packageManager, otl, callback)
@@ -59,7 +69,7 @@ public class OpsLoader {
     /**
      * A custom Loader that loads all of the very perm applications.
      */
-    public static class SimpleAppListLoader extends AsyncTask<Void, Void, Integer> {
+    private static class SimpleAppListLoader extends AsyncTask<Void, Void, Integer> {
 
         private AppOpsManager mAppOps;
         private PackageManager mPackageManager;
@@ -104,14 +114,15 @@ public class OpsLoader {
         protected void onPostExecute(Integer result) {
             super.onPostExecute(result);
             if (mAppLoaderCallback != null)
-                mAppLoaderCallback.onDetailListLoadFinish(null, result);
+                mAppLoaderCallback.onAppsListLoadFinish(null, result);
+            Logger.logger("load apps count finish got a result:-->" + result);
         }
     }
 
     /**
      * A custom Loader that loads all of the very perm applications.
      */
-    public static class AppListLoader extends AsyncTask<Void, Void, List<AppBean>> {
+    private static class AppListLoader extends AsyncTask<Void, Void, List<AppBean>> {
 
         private AppOpsManager mAppOps;
         private PackageManager mPackageManager;
@@ -189,7 +200,74 @@ public class OpsLoader {
         protected void onPostExecute(List<AppBean> result) {
             super.onPostExecute(result);
             if (mAppLoaderCallback != null)
-                mAppLoaderCallback.onDetailListLoadFinish(result, result.size());
+                mAppLoaderCallback.onAppsListLoadFinish(result, result.size());
+        }
+    }
+
+    private static class SpecialPermissionAppsLoader extends AsyncTask<Void, Void, List<AppBean>> {
+
+        private PackageManager mPackageManager;
+        private String mPermission;
+        private Context mContext;
+        private AppLoaderCallback mCallback;
+
+        /**
+         * @param mPermission What permission you wanna build apps for? such as:
+         *            Manifest.permission.INTERNET
+         * @param mContext
+         */
+        public SpecialPermissionAppsLoader(String mPermission, Context c,
+                PackageManager packageManager, AppLoaderCallback callback) {
+            this.mPermission = mPermission;
+            this.mContext = c;
+            this.mPackageManager = packageManager;
+            this.mCallback = callback;
+        }
+
+        @Override
+        protected List<AppBean> doInBackground(
+                Void... params) {
+            return buildGivenPermAppsList(mPermission, mPackageManager);
+        }
+
+        @Override
+        protected void onPostExecute(List<AppBean> result) {
+            super.onPostExecute(result);
+            if (mCallback != null)
+                mCallback.onAppsListLoadFinish(result, result.size());
+        }
+
+        /**
+         * Build app list for the given permission.
+         * 
+         * @param permissionm
+         * @param packageManager
+         */
+        private List<AppBean> buildGivenPermAppsList(String permissionm,
+                PackageManager packageManager) {
+
+            final List<AppBean> apps = new ArrayList<AppBean>();
+            final List<ApplicationInfo> installed = packageManager
+                    .getInstalledApplications(PackageManager.COMPONENT_ENABLED_STATE_DEFAULT);
+
+            for (ApplicationInfo info : installed) {
+
+                if (PackageManager.PERMISSION_GRANTED != packageManager
+                        .checkPermission(permissionm, info.packageName)) {
+                    continue;
+                }
+                // let's go.
+                final AppBean app = new AppBean();
+                final String label = info.loadLabel(mPackageManager).toString();
+                final String displayName = label != null ? label : info.packageName;
+                app.setDisplayName(displayName);
+                app.setDisplayIcon(info.loadIcon(mPackageManager));
+                app.setUid(info.uid);
+                app.setPackageName(info.packageName);
+
+                apps.add(app);
+            }
+            return apps;
         }
     }
 }

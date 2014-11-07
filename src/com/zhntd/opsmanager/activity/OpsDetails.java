@@ -8,7 +8,7 @@ import android.app.AppOpsManager;
 import com.zhntd.opsmanager.OpsManager;
 import com.zhntd.opsmanager.OpsTemplate;
 import com.zhntd.opsmanager.loader.AppBean;
-import com.zhntd.opsmanager.loader.OpsDetailListAdapter;
+import com.zhntd.opsmanager.loader.PermDetailListAdapter;
 import com.zhntd.opsmanager.loader.OpsLoader;
 import com.zhntd.opsmanager.loader.OpsLoader.AppLoaderCallback;
 
@@ -27,24 +27,24 @@ public class OpsDetails extends ActivityBase implements AppLoaderCallback {
     private AppOpsManager mAppOps;
     private PackageManager mPackageManager;
     private ListView mListView;
-    private OpsTemplate otl;
+    private OpsTemplate mOtl;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Bundle bundle = getIntent().getExtras();
-        otl = (OpsTemplate) bundle.getSerializable(OpsManager.KEY_OTL);
-        // TODO get real name
-        getActionBar().setTitle(otl.getPermCategorie() + "");
+        mOtl = (OpsTemplate) bundle.getSerializable(OpsManager.KEY_OTL);
+        if (mOtl.getPermName() != null)
+            getActionBar().setTitle(mOtl.getPermName());
         mListView = new ListView(this);
         setContentView(mListView);
         initLoader();
-        inflateListAsync(otl);
+        inflateListAsync(mOtl);
 
     }
 
     /**
-     * initial && mess things 
+     * initial && mess things
      */
     private void initLoader() {
         mAppOps = (AppOpsManager) this.getSystemService(Context.APP_OPS_SERVICE);
@@ -55,12 +55,13 @@ public class OpsDetails extends ActivityBase implements AppLoaderCallback {
      * @param otl
      */
     private void inflateListAsync(OpsTemplate otl) {
-        OpsLoader.getInstance().buildAppList(this, mAppOps, mPackageManager, otl, this, OpsLoader.FLAG_GET_LIST);
+        OpsLoader.getInstance().buildAppList(this, mAppOps, mPackageManager, otl, this,
+                OpsLoader.FLAG_GET_LIST);
     }
 
     @Override
-    public void onDetailListLoadFinish(List<AppBean> apps, int count) {
-        OpsDetailListAdapter adapter = new OpsDetailListAdapter(apps, this, mAppOps, otl);
+    public void onAppsListLoadFinish(List<AppBean> apps, int count) {
+        PermDetailListAdapter adapter = new PermDetailListAdapter(apps, this, mAppOps, mOtl);
         mListView.setAdapter(adapter);
     }
 

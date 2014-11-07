@@ -15,7 +15,7 @@ import com.zhntd.opsmanager.OpsTemplate;
 import com.zhntd.opsmanager.R;
 import com.zhntd.opsmanager.loader.ViewHolderList.ItemSelectedListener;
 
-public class OpsDetailListAdapter extends BaseAdapter implements ItemSelectedListener {
+public class PermDetailListAdapter extends BaseAdapter implements ItemSelectedListener {
 
     private List<AppBean> mApps;
     private ViewHolderList mViewHolder;
@@ -29,7 +29,7 @@ public class OpsDetailListAdapter extends BaseAdapter implements ItemSelectedLis
      * @param mApps
      * @param context
      */
-    public OpsDetailListAdapter(List<AppBean> mApps, Context context, AppOpsManager appOps,
+    public PermDetailListAdapter(List<AppBean> mApps, Context context, AppOpsManager appOps,
             OpsTemplate otl) {
         this.mApps = mApps;
         this.mContext = context;

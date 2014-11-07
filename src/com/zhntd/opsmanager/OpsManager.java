@@ -19,7 +19,8 @@ package com.zhntd.opsmanager;
 import java.util.ArrayList;
 import java.util.List;
 
-
+import android.Manifest;
+import android.R.integer;
 import android.app.Activity;
 import android.app.AppOpsManager;
 import android.app.Fragment;
@@ -34,13 +35,15 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
 
 import com.zhntd.opsmanager.R;
 import com.zhntd.opsmanager.activity.ActivityBase;
 import com.zhntd.opsmanager.activity.OpsDetails;
-import com.zhntd.opsmanager.loader.OpsListAdapter;
+import com.zhntd.opsmanager.loader.SummaryListAdapter;
 import com.zhntd.opsmanager.loader.OpsLoader;
+import com.zhntd.opsmanager.utils.Logger;
 
 public class OpsManager extends ActivityBase implements OnItemClickListener {
 
@@ -55,59 +58,64 @@ public class OpsManager extends ActivityBase implements OnItemClickListener {
     /**
      * @return OpsTemplates
      */
-    private List<OpsTemplate> createOpsListAndStrs() {
+    private void createOpsListAndStrs() {
         mOpsCate = getResources().getStringArray(R.array.app_ops_categories);
         mOpsLabels = getResources().getStringArray(R.array.app_ops_labels);
-        List<OpsTemplate> opsList = new ArrayList<OpsTemplate>();
+        mOpsList = new ArrayList<OpsTemplate>();
         // personal
-        opsList.add(new OpsTemplate(AppOpsState.PERSONAL_TEMPLATE, AppOpsManager.OP_READ_CONTACTS,
+        mOpsList.add(new OpsTemplate(AppOpsState.PERSONAL_TEMPLATE, AppOpsManager.OP_READ_CONTACTS,
                 true));
-        opsList.add(new OpsTemplate(AppOpsState.PERSONAL_TEMPLATE, AppOpsManager.OP_WRITE_CONTACTS));
-        opsList.add(new OpsTemplate(AppOpsState.PERSONAL_TEMPLATE, AppOpsManager.OP_READ_CALL_LOG));
-        opsList.add(new OpsTemplate(AppOpsState.PERSONAL_TEMPLATE, AppOpsManager.OP_WRITE_CALL_LOG));
-        opsList.add(new OpsTemplate(AppOpsState.PERSONAL_TEMPLATE, AppOpsManager.OP_READ_CALENDAR));
-        opsList.add(new OpsTemplate(AppOpsState.PERSONAL_TEMPLATE, AppOpsManager.OP_WRITE_CALENDAR));
-        opsList.add(new OpsTemplate(AppOpsState.PERSONAL_TEMPLATE, AppOpsManager.OP_READ_CLIPBOARD));
-        opsList.add(new OpsTemplate(AppOpsState.PERSONAL_TEMPLATE, AppOpsManager.OP_WRITE_CLIPBOARD));
+        mOpsList.add(new OpsTemplate(AppOpsState.PERSONAL_TEMPLATE, AppOpsManager.OP_WRITE_CONTACTS));
+        mOpsList.add(new OpsTemplate(AppOpsState.PERSONAL_TEMPLATE, AppOpsManager.OP_READ_CALL_LOG));
+        mOpsList.add(new OpsTemplate(AppOpsState.PERSONAL_TEMPLATE, AppOpsManager.OP_WRITE_CALL_LOG));
+        mOpsList.add(new OpsTemplate(AppOpsState.PERSONAL_TEMPLATE, AppOpsManager.OP_READ_CALENDAR));
+        mOpsList.add(new OpsTemplate(AppOpsState.PERSONAL_TEMPLATE, AppOpsManager.OP_WRITE_CALENDAR));
+        mOpsList.add(new OpsTemplate(AppOpsState.PERSONAL_TEMPLATE, AppOpsManager.OP_READ_CLIPBOARD));
+        mOpsList.add(new OpsTemplate(AppOpsState.PERSONAL_TEMPLATE,
+                AppOpsManager.OP_WRITE_CLIPBOARD));
 
         // media
-        opsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
+        mOpsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
                 AppOpsManager.OP_VIBRATE,
                 true));
-        opsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
+        mOpsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
                 AppOpsManager.OP_CAMERA));
-        opsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
+        mOpsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
                 AppOpsManager.OP_RECORD_AUDIO));
-        opsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
+        mOpsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
                 AppOpsManager.OP_PLAY_AUDIO));
-        opsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
+        mOpsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
                 AppOpsManager.OP_TAKE_MEDIA_BUTTONS));
-        opsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
+        mOpsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
                 AppOpsManager.OP_TAKE_AUDIO_FOCUS));
-        opsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
+        mOpsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
                 AppOpsManager.OP_AUDIO_MASTER_VOLUME));
-        opsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
+        mOpsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
                 AppOpsManager.OP_AUDIO_VOICE_VOLUME));
-        opsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
+        mOpsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
                 AppOpsManager.OP_AUDIO_RING_VOLUME));
-        opsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
+        mOpsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
                 AppOpsManager.OP_AUDIO_MEDIA_VOLUME));
-        opsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
+        mOpsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
                 AppOpsManager.OP_AUDIO_ALARM_VOLUME));
-        opsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
+        mOpsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
                 AppOpsManager.OP_AUDIO_NOTIFICATION_VOLUME));
-        opsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
+        mOpsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
                 AppOpsManager.OP_AUDIO_BLUETOOTH_VOLUME));
-        opsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
+        mOpsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
                 AppOpsManager.OP_WIFI_CHANGE));
-        opsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
+        mOpsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
                 AppOpsManager.OP_BLUETOOTH_CHANGE));
-        opsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
+        mOpsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
                 AppOpsManager.OP_DATA_CONNECT_CHANGE));
 
-        mOpsList = opsList;
-
-        return opsList;
+        // put a name for every permmission
+        for (int i = 0; i < mOpsList.size(); i++) {
+            OpsTemplate otl = mOpsList.get(i);
+            otl.setPermName(mOpsLabels[i]);
+            //for a test
+            otl.setPermName(Manifest.permission.INTERNET);
+        }
     }
 
     @Override
@@ -123,9 +131,9 @@ public class OpsManager extends ActivityBase implements OnItemClickListener {
      */
     void inflateList() {
         createOpsListAndStrs();
-        OpsListAdapter opsListAdapter = new OpsListAdapter(mOpsList, mOpsCate,
+        SummaryListAdapter mOpsListAdapter = new SummaryListAdapter(mOpsList, mOpsCate,
                 mOpsLabels, this);
-        mListView.setAdapter(opsListAdapter);
+        mListView.setAdapter(mOpsListAdapter);
         mListView.setOnItemClickListener(this);
     }
 
@@ -134,12 +142,20 @@ public class OpsManager extends ActivityBase implements OnItemClickListener {
         OpsTemplate otl = mOpsList.get(position);
         if (otl != null) {
             // No need to show anything ?
-            if (otl.getAppsCount() == 0) return;
+            if (otl.getAppsCount() <= 0) {
+                // TODO make it in res.
+                // No, We'd better tell user sth...
+                Toast.makeText(OpsManager.this, "no such app found...", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            // Okay to show sth now.
             final Intent intent = new Intent(OpsManager.this, OpsDetails.class);
             final Bundle bundle = new Bundle();
             bundle.putSerializable(KEY_OTL, otl);
             intent.putExtras(bundle);
             startActivity(intent);
+        } else {
+            Logger.logger("Got a null OTL, Why?");
         }
     }
 }

@@ -4,9 +4,9 @@ package com.zhntd.opsmanager;
 import java.io.Serializable;
 
 /**
- * @author nick
+ * @author zhntd
  * @date Nov 6, 2014
- * @time 10:29:59 AM TODO par??
+ * @time 10:29:59 AM
  */
 public class OpsTemplate implements Serializable {
     /**
@@ -15,6 +15,7 @@ public class OpsTemplate implements Serializable {
     private static final long serialVersionUID = 100001L;
     private int permCategory;
     private int permLabel;
+    private String permName;
     /* if true, this will be see as a list aheader */
     private boolean isAhead;
     /* how many apps "wanna" access this op */
@@ -34,10 +35,34 @@ public class OpsTemplate implements Serializable {
      * @param isAhead
      */
     public OpsTemplate(int permCategory, int permLabel, boolean isAhead) {
+        this(permCategory, permLabel, null, isAhead);
+    }
+
+    /**
+     * @param permCategory
+     * @param permLabel
+     * @param isAhead
+     */
+    public OpsTemplate(int permCategory, int permLabel, String permName, boolean isAhead) {
         super();
         this.permCategory = permCategory;
         this.permLabel = permLabel;
+        this.permName = permName;
         this.isAhead = isAhead;
+    }
+
+    /**
+     * @return the permName
+     */
+    public String getPermName() {
+        return permName;
+    }
+
+    /**
+     * @param permName the permName to set
+     */
+    public void setPermName(String permName) {
+        this.permName = permName;
     }
 
     /**
