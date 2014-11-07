@@ -1,0 +1,12 @@
+<resources>
+
+    <string name="app_name">Permission manager</string>
+    <!-- Dev tweak res-->
+    <string name="dev_tweak_title">Permission manager</string>
+     <string name="title_apps">Applications</string>
+    <string name="dev_tweak_summary">Tweaks for android developers</string>
+    <string name="fancy_anim_key">fancy_anim_key</string>
+    <string name="fancy_anim_title">Fancy animation</string>
+    <string name="fancy_anim_summary">Enable fancy animation in apps</string>
+
+</resources>
