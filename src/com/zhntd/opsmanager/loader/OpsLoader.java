@@ -3,6 +3,8 @@ package com.zhntd.opsmanager.loader;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import com.zhntd.opsmanager.OpsTemplate;
 import com.zhntd.opsmanager.utils.Logger;
@@ -11,12 +13,19 @@ import android.Manifest;
 import android.content.AsyncTaskLoader;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.R.color;
 import android.app.AppOpsManager;
 
+/**
+ * @author zhntd
+ * @date Nov 6, 2014
+ * @time 5:01:12 PM
+ */
 public class OpsLoader {
 
     public static final int FLAG_GET_LIST = 0;
@@ -29,6 +38,8 @@ public class OpsLoader {
     }
 
     public interface AppLoaderCallback {
+        void onListPreLoad();
+
         void onAppsListLoadFinish(List<AppBean> apps, int count);
     }
 
@@ -42,14 +53,16 @@ public class OpsLoader {
      */
     public void buildAppList(Context context, AppOpsManager appOps,
             PackageManager packageManager, OpsTemplate otl, AppLoaderCallback callback, int flag) {
-        
-        // test part..
-        if (Manifest.permission.INTERNET.equals(otl.getPermName())) {
+
+        // special part..such as: INTERNET
+        if (AppOpsManager.OP_DATA_CONNECT_CHANGE == otl.getPermLabel()) {
             String permission = Manifest.permission.INTERNET;
-            new SpecialPermissionAppsLoader(permission, context, packageManager, callback).execute();
+            new SpecialPermissionAppsLoader(permission, context, packageManager, callback)
+                    .execute();
             return;
         }
-        
+
+        // we use opsManager for this part.
         switch (flag) {
             case FLAG_GET_LIST:
                 new AppListLoader(context, appOps, packageManager, otl, callback)
@@ -99,8 +112,20 @@ public class OpsLoader {
             };
             pkgs = mAppOps.getPackagesForOps(otls);
             if (pkgs != null) {
-                count = pkgs.size();
-                return count;
+                for (int i = 0; i < pkgs.size(); i++) {
+                    AppOpsManager.PackageOps pkgOps = pkgs.get(i);
+                    ApplicationInfo info;
+                    try {
+                        info = mPackageManager.getApplicationInfo(
+                                pkgOps.getPackageName(), PackageManager.GET_UNINSTALLED_PACKAGES);
+                    } catch (NameNotFoundException e) {
+                        continue;
+                    }
+                    // ignore system apps.
+                    if (info != null && filterApp(info)) {
+                        count++;
+                    }
+                }
             }
             return count;
         }
@@ -108,6 +133,12 @@ public class OpsLoader {
         @Override
         protected Integer doInBackground(Void... params) {
             return buildAppListCount(otl);
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            mAppLoaderCallback.onListPreLoad();
         }
 
         @Override
@@ -161,11 +192,8 @@ public class OpsLoader {
                     } catch (NameNotFoundException e) {
                         continue;
                     }
-
-                    if (info != null) {
-                        // ignore system apps.
-                        // if (info.flags == ApplicationInfo.)
-                        // continue;
+                    // ignore system apps.
+                    if (info != null && filterApp(info)) {
                         AppBean appBean = new AppBean();
                         String label = info.loadLabel(mPackageManager).toString();
                         String displayName = label != null ? label : info.packageName;
@@ -194,6 +222,12 @@ public class OpsLoader {
         @Override
         protected List<AppBean> doInBackground(Void... params) {
             return buildAppList(otl);
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            mAppLoaderCallback.onListPreLoad();
         }
 
         @Override
@@ -231,6 +265,12 @@ public class OpsLoader {
         }
 
         @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            mCallback.onListPreLoad();
+        }
+
+        @Override
         protected void onPostExecute(List<AppBean> result) {
             super.onPostExecute(result);
             if (mCallback != null)
@@ -252,6 +292,10 @@ public class OpsLoader {
 
             for (ApplicationInfo info : installed) {
 
+                // ignore system apps
+                if (!filterApp(info))
+                    continue;
+
                 if (PackageManager.PERMISSION_GRANTED != packageManager
                         .checkPermission(permissionm, info.packageName)) {
                     continue;
@@ -269,5 +313,20 @@ public class OpsLoader {
             }
             return apps;
         }
+    }
+
+    /**
+     * We only need to get a thrid-party app.
+     * 
+     * @param info
+     * @return
+     */
+    public static boolean filterApp(ApplicationInfo info) {
+        if ((info.flags & ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0) {
+            return true;
+        } else if ((info.flags & ApplicationInfo.FLAG_SYSTEM) == 0) {
+            return true;
+        }
+        return false;
     }
 }

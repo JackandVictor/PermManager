@@ -68,21 +68,35 @@ public class SummaryListAdapter extends BaseAdapter {
         return position;
     }
 
+    final static class ViewHolder {
+        TextView lebelTextView;
+        TextView countTextView;
+        TextView headerTextView;
+    }
+
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
 
-        View rootView = mInflater.inflate(R.layout.ops_list_item, null);
-        TextView lebelTextView = (TextView) rootView.findViewById(R.id.ops_label);
-        lebelTextView.setText(mOpsLabels[position]);
-        final TextView countTextView = (TextView) rootView.findViewById(R.id.ops_count);
-        TextView headerTextView = (TextView) rootView.findViewById(R.id.ops_cate);
+        final ViewHolder viewHolder;
+        if (convertView == null) {
+            viewHolder = new ViewHolder();
+            convertView = mInflater.inflate(R.layout.ops_list_item, null);
+            viewHolder.lebelTextView = (TextView) convertView.findViewById(R.id.ops_label);
+            viewHolder.countTextView = (TextView) convertView.findViewById(R.id.ops_count);
+            viewHolder.headerTextView = (TextView) convertView.findViewById(R.id.ops_cate);
 
+            convertView.setTag(viewHolder);
+        } else {
+            viewHolder = (ViewHolder) convertView.getTag();
+        }
+
+        viewHolder.lebelTextView.setText(mOpsLabels[position]);
         final OpsTemplate otl = mOpsList.get(position);
         if (otl.isAhead()) {
-            headerTextView.setText(mOpsCates[mOpsList.get(position).getPermCategorie()]);
-            headerTextView.setVisibility(View.VISIBLE);
+            viewHolder.headerTextView.setText(mOpsCates[mOpsList.get(position).getPermCategorie()]);
+            viewHolder.headerTextView.setVisibility(View.VISIBLE);
         } else {
-            headerTextView.setVisibility(View.GONE);
+            viewHolder.headerTextView.setVisibility(View.GONE);
         }
 
         /* load the count in a loader async.. */
@@ -92,16 +106,23 @@ public class SummaryListAdapter extends BaseAdapter {
                     @Override
                     public void onAppsListLoadFinish(List<AppBean> apps, int count) {
                         // TODO make it in res.
-                        if (countTextView != null)
-                            countTextView.setText(count + "");
+                        if (viewHolder.countTextView != null)
+                            viewHolder.countTextView.setText(count + "");
                         // should update the count now.
                         if (otl != null)
                             otl.setAppsCount(count);
                     }
+                    
+                    @Override
+                    public void onListPreLoad() {
+                        // TODO make it in res
+                        if (viewHolder.countTextView != null)
+                            viewHolder.countTextView.setText("loading");
+                    }
 
                 }, OpsLoader.FLAG_GET_COUNT);
 
-        return rootView;
+        return convertView;
     }
 
 }

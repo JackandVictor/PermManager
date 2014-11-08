@@ -64,5 +64,9 @@ public class OpsDetails extends ActivityBase implements AppLoaderCallback {
         PermDetailListAdapter adapter = new PermDetailListAdapter(apps, this, mAppOps, mOtl);
         mListView.setAdapter(adapter);
     }
-
+    
+    @Override
+    public void onListPreLoad() {
+        // EMPTY
+    }
 }

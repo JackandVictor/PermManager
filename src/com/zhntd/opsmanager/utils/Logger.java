@@ -4,7 +4,7 @@ package com.zhntd.opsmanager.utils;
 import android.util.Log;
 
 /**
- * @author nick
+ * @author ntd
  * @date Nov 6, 2014
  * @time 5:39:04 PM
  */

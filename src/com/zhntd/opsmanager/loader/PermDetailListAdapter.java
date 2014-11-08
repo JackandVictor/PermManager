@@ -81,6 +81,7 @@ public class PermDetailListAdapter extends BaseAdapter implements ItemSelectedLi
         final AppBean appBean = mApps.get(positionInList);
         int mode = AppOpsManager.MODE_ASK;
 
+        //Do a ugly check...
         switch (item) {
             case 0:
                 mode = AppOpsManager.MODE_ASK;

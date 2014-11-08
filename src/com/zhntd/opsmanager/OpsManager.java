@@ -71,8 +71,7 @@ public class OpsManager extends ActivityBase implements OnItemClickListener {
         mOpsList.add(new OpsTemplate(AppOpsState.PERSONAL_TEMPLATE, AppOpsManager.OP_READ_CALENDAR));
         mOpsList.add(new OpsTemplate(AppOpsState.PERSONAL_TEMPLATE, AppOpsManager.OP_WRITE_CALENDAR));
         mOpsList.add(new OpsTemplate(AppOpsState.PERSONAL_TEMPLATE, AppOpsManager.OP_READ_CLIPBOARD));
-        mOpsList.add(new OpsTemplate(AppOpsState.PERSONAL_TEMPLATE,
-                AppOpsManager.OP_WRITE_CLIPBOARD));
+        mOpsList.add(new OpsTemplate(AppOpsState.PERSONAL_TEMPLATE, AppOpsManager.OP_WRITE_CLIPBOARD));
 
         // media
         mOpsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
@@ -108,13 +107,68 @@ public class OpsManager extends ActivityBase implements OnItemClickListener {
                 AppOpsManager.OP_BLUETOOTH_CHANGE));
         mOpsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
                 AppOpsManager.OP_DATA_CONNECT_CHANGE));
+        
+        //location
+        mOpsList.add(new OpsTemplate(AppOpsState.LOCATION_TEMPLATE,
+                AppOpsManager.OP_COARSE_LOCATION,true));
+        mOpsList.add(new OpsTemplate(AppOpsState.LOCATION_TEMPLATE,
+                AppOpsManager.OP_FINE_LOCATION));
+        mOpsList.add(new OpsTemplate(AppOpsState.LOCATION_TEMPLATE,
+                AppOpsManager.OP_GPS));
+        mOpsList.add(new OpsTemplate(AppOpsState.LOCATION_TEMPLATE,
+                AppOpsManager.OP_WIFI_SCAN));
+        mOpsList.add(new OpsTemplate(AppOpsState.LOCATION_TEMPLATE,
+                AppOpsManager.OP_MONITOR_LOCATION));
+        mOpsList.add(new OpsTemplate(AppOpsState.LOCATION_TEMPLATE,
+                AppOpsManager.OP_MONITOR_HIGH_POWER_LOCATION));
+        
+        //message
+        mOpsList.add(new OpsTemplate(AppOpsState.MESSAGING_TEMPLATE,
+                AppOpsManager.OP_READ_SMS,true));
+        mOpsList.add(new OpsTemplate(AppOpsState.MESSAGING_TEMPLATE,
+                AppOpsManager.OP_WRITE_SMS));
+        mOpsList.add(new OpsTemplate(AppOpsState.MESSAGING_TEMPLATE,
+                AppOpsManager.OP_RECEIVE_SMS));
+        mOpsList.add(new OpsTemplate(AppOpsState.MESSAGING_TEMPLATE,
+                AppOpsManager.OP_RECEIVE_EMERGECY_SMS));
+        mOpsList.add(new OpsTemplate(AppOpsState.MESSAGING_TEMPLATE,
+                AppOpsManager.OP_RECEIVE_MMS));
+        mOpsList.add(new OpsTemplate(AppOpsState.MESSAGING_TEMPLATE,
+                AppOpsManager.OP_RECEIVE_WAP_PUSH));
+        mOpsList.add(new OpsTemplate(AppOpsState.MESSAGING_TEMPLATE,
+                AppOpsManager.OP_SEND_SMS));
+        mOpsList.add(new OpsTemplate(AppOpsState.MESSAGING_TEMPLATE,
+                AppOpsManager.OP_SEND_MMS));
+        mOpsList.add(new OpsTemplate(AppOpsState.MESSAGING_TEMPLATE,
+                AppOpsManager.OP_READ_MMS));
+        mOpsList.add(new OpsTemplate(AppOpsState.MESSAGING_TEMPLATE,
+                AppOpsManager.OP_WRITE_MMS));
+
+        
+        //device
+        mOpsList.add(new OpsTemplate(AppOpsState.DEVICE_TEMPLATE,
+                AppOpsManager.OP_POST_NOTIFICATION,true));
+        mOpsList.add(new OpsTemplate(AppOpsState.DEVICE_TEMPLATE,
+                AppOpsManager.OP_WRITE_SETTINGS));
+        mOpsList.add(new OpsTemplate(AppOpsState.DEVICE_TEMPLATE,
+                AppOpsManager.OP_SYSTEM_ALERT_WINDOW));
+        mOpsList.add(new OpsTemplate(AppOpsState.DEVICE_TEMPLATE,
+                AppOpsManager.OP_ACCESS_NOTIFICATIONS));
+        mOpsList.add(new OpsTemplate(AppOpsState.DEVICE_TEMPLATE,
+                AppOpsManager.OP_WAKE_LOCK));
+        mOpsList.add(new OpsTemplate(AppOpsState.DEVICE_TEMPLATE,
+                AppOpsManager.OP_CALL_PHONE));
+        
+        //bootup
+        mOpsList.add(new OpsTemplate(AppOpsState.BOOTUP_TEMPLATE,
+                AppOpsManager.OP_BOOT_COMPLETED,true));
 
         // put a name for every permmission
         for (int i = 0; i < mOpsList.size(); i++) {
             OpsTemplate otl = mOpsList.get(i);
             otl.setPermName(mOpsLabels[i]);
-            //for a test
-            otl.setPermName(Manifest.permission.INTERNET);
+            // for a test
+            // otl.setPermName(Manifest.permission.INTERNET);
         }
     }
 

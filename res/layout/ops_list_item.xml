@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="60dp" >
+    android:layout_height="wrap_content" >
 
     <TextView
         android:id="@+id/ops_count"
@@ -14,25 +14,34 @@
         android:padding="10dp"
         android:textAppearance="?android:attr/textAppearanceSmall" />
 
-    <TextView
-        android:id="@+id/ops_cate"
+    <RelativeLayout
+        android:id="@+id/relativeLayout1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
-        android:layout_marginLeft="8dp"
-        android:layout_marginRight="8dp"
-        android:padding="2dp"
-        android:background="@color/list_aheader_bg"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textStyle="italic|bold" />
+        android:background="@color/list_aheader_bg" >
+
+        <TextView
+            android:id="@+id/ops_cate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:background="@color/list_aheader_bg"
+            android:padding="10dp"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textSize="22dp"
+            android:textStyle="bold" />
+    </RelativeLayout>
 
     <TextView
         android:id="@+id/ops_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_below="@+id/ops_cate"
-        android:padding="10dp" />
+        android:layout_below="@+id/relativeLayout1"
+        android:padding="10dp"
+        android:textSize="20dp" />
 
 </RelativeLayout>
