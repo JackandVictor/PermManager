@@ -48,6 +48,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.util.Log;
 import android.widget.Toast;
+import com.zhntd.opsmanager.R;
 
 /**
  * Contains shared programming interfaces. All iptables "communication" is
@@ -921,7 +922,7 @@ public final class Api {
                 changed = true;
             }
             if (changed) {
-                Toast.makeText(ctx, R.string.toast_bin_installed, Toast.LENGTH_LONG).show();
+              //  Toast.makeText(ctx, R.string.toast_bin_installed, Toast.LENGTH_LONG).show();
             }
         } catch (Exception e) {
             if (showErrors)

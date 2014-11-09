@@ -46,7 +46,7 @@ public class ViewHolderList {
 
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                callback.onSpinnerItemSelect(position, positionInList);
+                callback.onSpinnerItemSelect(ViewHolderList.this, position, positionInList);
             }
 
             @Override
@@ -56,6 +56,9 @@ public class ViewHolderList {
         });
     }
 
+    /**
+     * @param mode current mode.
+     */
     public void setCurrentMode(int mode) {
         int selection = 0;
         // The mode(integer) defines in OpsManager and NetworkControlor are
@@ -77,7 +80,7 @@ public class ViewHolderList {
                 selection = 0;
                 break;
         }
-        if (spinner != null)
+        if (spinner != null) {}
         spinner.setSelection(selection);
     }
 
@@ -86,6 +89,6 @@ public class ViewHolderList {
      * Should be implement.
      */
     public interface ItemSelectedListener {
-        void onSpinnerItemSelect(int item, int positionInList);
+        void onSpinnerItemSelect(ViewHolderList viewHolder, int item, int positionInList);
     }
 }

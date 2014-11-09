@@ -37,7 +37,7 @@ public class OpsLoader {
     public static final int FLAG_GET_COUNT = 1;
 
     private static final OpsLoader mLoader = new OpsLoader();
-    
+
     private static NetworkControlor mNetworkControlor;
 
     public static OpsLoader getInstance() {
@@ -270,6 +270,7 @@ public class OpsLoader {
         private PackageManager mPackageManager;
         private String mPermission;
         private AppLoaderCallback mCallback;
+        private Context mContext;
 
         /**
          * @param mPermission What permission you wanna build apps for? such as:
@@ -281,6 +282,7 @@ public class OpsLoader {
             this.mPermission = mPermission;
             this.mPackageManager = packageManager;
             this.mCallback = callback;
+            this.mContext = c;
         }
 
         @Override
@@ -335,6 +337,16 @@ public class OpsLoader {
                 app.setDisplayIcon(info.loadIcon(mPackageManager));
                 app.setUid(info.uid);
                 app.setPackageName(info.packageName);
+                // time to get mode.
+                if (Manifest.permission.INTERNET.equals(mPermission)) {
+                    // load data control operation mode.
+                    if (mNetworkControlor == null)
+                        mNetworkControlor = new NetworkControlor(mContext);
+                    int uid = info.uid;
+                    int mode = mNetworkControlor.getCurrentMode(uid);
+                    app.setMode(mode);
+                    Logger.logger("OpsLOader: get a mode frm db:" + mode);
+                }
                 // finally we can add to the list.
                 apps.add(app);
             }

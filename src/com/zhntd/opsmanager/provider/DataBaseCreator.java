@@ -6,10 +6,17 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.database.sqlite.SQLiteOpenHelper;
 
+/**
+ * Database helper to handle db.
+ * 
+ * @author zhntd
+ * @date Nov 9, 2014
+ * @time 3:20:17 PM
+ */
 public class DataBaseCreator extends SQLiteOpenHelper {
 
-    public static final String TABLE_NAME = "data.control.table";
-    public static final String DATABASE_NAME = "com.zhntd.permmanager.data.db";
+    public static final String TABLE_NAME = "data_control_table";
+    public static final String DATABASE_NAME = "com_zhntd_permmanager_data_db";
     public static int DATA_BASE_VERSION = 1;
     public static final int COLUMN_PACKAGENAME = 1;
     public static final int COLUMN_UID = 2;

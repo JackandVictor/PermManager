@@ -25,7 +25,6 @@ import com.zhntd.opsmanager.net.NetworkControlor;
 public class PermDetailListAdapter extends BaseAdapter implements ItemSelectedListener {
 
     private List<AppBean> mApps;
-    private ViewHolderList mViewHolder;
     private LayoutInflater mInflater;
 
     private AppOpsManager mAppOps;
@@ -66,25 +65,29 @@ public class PermDetailListAdapter extends BaseAdapter implements ItemSelectedLi
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
+        final ViewHolderList viewHolder;
         if (convertView == null) {
             // TODO Should the root parent be null?
             convertView = mInflater.inflate(R.layout.apps_list, null);
-            mViewHolder = new ViewHolderList(convertView, mContext, this, position);
-            convertView.setTag(mViewHolder);
+            viewHolder = new ViewHolderList(convertView, mContext, this, position);
+            convertView.setTag(viewHolder);
 
         } else {
-            mViewHolder = (ViewHolderList) convertView.getTag();
+            viewHolder = (ViewHolderList) convertView.getTag();
         }
         final AppBean app = mApps.get(position);
-        mViewHolder.setCurrentMode(app.getMode());
-        mViewHolder.titleView.setText(app.getDisplayName());
-        mViewHolder.iconView.setImageDrawable(app.getDisplayIcon());
+        // update spinner selection.
+        viewHolder.setCurrentMode(app.getMode());
+        // app name.
+        viewHolder.titleView.setText(app.getDisplayName());
+        // icon here.
+        viewHolder.iconView.setImageDrawable(app.getDisplayIcon());
 
         return convertView;
     }
 
     @Override
-    public void onSpinnerItemSelect(int item, int positionInList) {
+    public void onSpinnerItemSelect(ViewHolderList viewHolder, int item, int positionInList) {
 
         // For data permission control.
         if (AppOpsState.DATA_PERMISSION == mOtl.getPermLabel()) {
@@ -113,8 +116,11 @@ public class PermDetailListAdapter extends BaseAdapter implements ItemSelectedLi
             final AppBean appBean = mApps.get(positionInList);
             final int uid = appBean.getUid();
             final String packageName = appBean.getPackageName();
+            // Do not forget to update mode to this app in the list.
+            appBean.setMode(mode);
             mNetworkControlor.setCurrentMode(uid, packageName, mode);
-            
+            if (viewHolder != null)
+                viewHolder.setCurrentMode(mode);
             return;
         }
 
@@ -142,7 +148,7 @@ public class PermDetailListAdapter extends BaseAdapter implements ItemSelectedLi
                 mode = AppOpsManager.MODE_ASK;
                 break;
         }
-        // Let the OpsManager to control.
+        // Let OpsManager to control.
         mAppOps.setMode(switchOp, appBean.getUid(),
                 appBean.getPackageName(), mode);
     }

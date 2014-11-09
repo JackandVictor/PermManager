@@ -12,7 +12,7 @@ import com.zhntd.opsmanager.provider.DataBaseCreator;
 import com.zhntd.opsmanager.utils.Logger;
 
 /**
- * Control network activities of the given application.
+ * Control data activities of the given application.
  * 
  * @author zhntd
  * @date Nov 8, 2014
@@ -59,6 +59,11 @@ public class NetworkControlor {
         }
     }
 
+    // TODO Please implement this....
+    public synchronized boolean deleteFrmSpf(String uid, DataType type) {
+        return false;
+    }
+
     /**
      * @param uid
      * @return
@@ -78,9 +83,11 @@ public class NetworkControlor {
             if (cursor.getCount() > 0) {
                 // Resume there is no same uids.
                 int mode = cursor.getInt(DataBaseCreator.COLUMN_MODE);
+                Logger.logger("getCurrentMode get called, and return a mode of : " + mode);
                 return mode;
             } else {
                 // If the uid is not ever saved, use the default mode.
+                Logger.logger("getCurrentMode get called, and return a mode of : " + MODE_ASK);
                 return MODE_ASK;
             }
         } catch (IllegalArgumentException e) {
@@ -98,6 +105,18 @@ public class NetworkControlor {
      * @return
      */
     public synchronized boolean setCurrentMode(int uid, String packageName, int mode) {
+
+        // first we apply the iptable.
+        if (mode == NetworkControlor.MODE_ALLOWED) {
+            writeToSpf(uid + "", DataType.WIFI);
+        } else if (mode == NetworkControlor.MODE_DENIED) {
+            deleteFrmSpf(uid + "", DataType.WIFI);
+        }
+        applySavedIptablesRules(mContext, true);
+
+        // try to delete first.
+        deleteFrmDb(packageName, uid);
+        // now insert.
         DataBaseCreator dataBaseCreator = null;
         SQLiteDatabase sqLiteDatabase = null;
         try {
@@ -112,6 +131,9 @@ public class NetworkControlor {
             if (id == -1) {
                 Logger.logger("ERROR when insert to db...");
                 return false;
+            } else {
+                Logger.logger("Successfully to set a mode to : " + mode
+                        + "packageName : " + packageName);
             }
             return true;
         } catch (IllegalArgumentException e) {
@@ -119,6 +141,35 @@ public class NetworkControlor {
             Logger.logger("ERROR when insert to db, starting clean up...");
             cleanUp(dataBaseCreator, sqLiteDatabase, null);
             return false;
+        } finally {
+            cleanUp(dataBaseCreator, sqLiteDatabase, null);
+        }
+    }
+
+    /**
+     * @param packageName
+     * @param uid
+     * @return
+     */
+    private int deleteFrmDb(String packageName, int uid) {
+        DataBaseCreator dataBaseCreator = null;
+        SQLiteDatabase sqLiteDatabase = null;
+        try {
+            dataBaseCreator = new DataBaseCreator(mContext,
+                    DataBaseCreator.DATABASE_NAME, null, DataBaseCreator.DATA_BASE_VERSION);
+            sqLiteDatabase = dataBaseCreator.getWritableDatabase();
+            int rows = sqLiteDatabase.delete(DataBaseCreator.TABLE_NAME, "UID=?",
+                    new String[] {
+                        uid + ""
+                    });
+            Logger.logger("Deleted frm db, package:" + packageName + "total rows count:" + rows);
+            return rows;
+
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+            Logger.logger("ERROR when insert to db, starting clean up...");
+            cleanUp(dataBaseCreator, sqLiteDatabase, null);
+            return 0;
         } finally {
             cleanUp(dataBaseCreator, sqLiteDatabase, null);
         }
@@ -191,6 +242,11 @@ public class NetworkControlor {
     }
 
     /**
+     * USAGE: 1. If you want to deny an app, please provide at least a uid. and
+     * call writeToSpf to save rules in system, then call this method. 2. If you
+     * wanna grant an app please also provide a uid, and remove them from spf,
+     * then apply rules.
+     * 
      * @param ctx
      * @param showErrors
      * @return

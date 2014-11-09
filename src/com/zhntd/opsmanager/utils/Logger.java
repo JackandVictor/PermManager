@@ -4,11 +4,13 @@ package com.zhntd.opsmanager.utils;
 import android.util.Log;
 
 /**
+ * Log helper.
+ * 
  * @author ntd
  * @date Nov 6, 2014
  * @time 5:39:04 PM
  */
-public class Logger {
+public final class Logger {
 
     private static final String TAG = "com.zhntd.permmanager.logger.tag";
     private static final boolean DEBUG = true;
