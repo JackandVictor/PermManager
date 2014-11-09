@@ -13,8 +13,11 @@ public class OpsTemplate implements Serializable {
      * 
      */
     private static final long serialVersionUID = 100001L;
+    /* describe the category of the permission*/
     private int permCategory;
+    /* see more in OpsManager.java*/
     private int permLabel;
+    /* name str of the permission*/
     private String permName;
     /* if true, this will be see as a list aheader */
     private boolean isAhead;

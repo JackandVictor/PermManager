@@ -20,9 +20,9 @@ import android.widget.ListView;
 /**
  * @author nick
  * @date Nov 6, 2014
- * @time 2:32:24 PM TODO
+ * @time 2:32:24 PM
  */
-public class OpsDetails extends ActivityBase implements AppLoaderCallback {
+public class OpsDetails extends BaseActivity implements AppLoaderCallback {
 
     private AppOpsManager mAppOps;
     private PackageManager mPackageManager;
@@ -35,18 +35,17 @@ public class OpsDetails extends ActivityBase implements AppLoaderCallback {
         Bundle bundle = getIntent().getExtras();
         mOtl = (OpsTemplate) bundle.getSerializable(OpsManager.KEY_OTL);
         if (mOtl.getPermName() != null)
-            getActionBar().setTitle(mOtl.getPermName());
+            setTitle(mOtl.getPermName());
         mListView = new ListView(this);
         setContentView(mListView);
-        initLoader();
-        inflateListAsync(mOtl);
-
+        init();
+        StartLoading(mOtl);
     }
 
     /**
      * initial && mess things
      */
-    private void initLoader() {
+    private void init() {
         mAppOps = (AppOpsManager) this.getSystemService(Context.APP_OPS_SERVICE);
         mPackageManager = this.getPackageManager();
     }
@@ -54,7 +53,7 @@ public class OpsDetails extends ActivityBase implements AppLoaderCallback {
     /**
      * @param otl
      */
-    private void inflateListAsync(OpsTemplate otl) {
+    private void StartLoading(OpsTemplate otl) {
         OpsLoader.getInstance().buildAppList(this, mAppOps, mPackageManager, otl, this,
                 OpsLoader.FLAG_GET_LIST);
     }
@@ -64,9 +63,9 @@ public class OpsDetails extends ActivityBase implements AppLoaderCallback {
         PermDetailListAdapter adapter = new PermDetailListAdapter(apps, this, mAppOps, mOtl);
         mListView.setAdapter(adapter);
     }
-    
+
     @Override
     public void onListPreLoad() {
-        // EMPTY
+        // EMPTY maybe we call show a progress bar?
     }
 }

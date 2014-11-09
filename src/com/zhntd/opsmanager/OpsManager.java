@@ -39,13 +39,13 @@ import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
 
 import com.zhntd.opsmanager.R;
-import com.zhntd.opsmanager.activity.ActivityBase;
+import com.zhntd.opsmanager.activity.BaseActivity;
 import com.zhntd.opsmanager.activity.OpsDetails;
 import com.zhntd.opsmanager.loader.SummaryListAdapter;
 import com.zhntd.opsmanager.loader.OpsLoader;
 import com.zhntd.opsmanager.utils.Logger;
 
-public class OpsManager extends ActivityBase implements OnItemClickListener {
+public class OpsManager extends BaseActivity implements OnItemClickListener {
 
     private ListView mListView;
 
@@ -53,7 +53,7 @@ public class OpsManager extends ActivityBase implements OnItemClickListener {
     private String[] mOpsCate;
     private String[] mOpsLabels;
 
-    public static String KEY_OTL = "com.nick.bundle.key.otl";
+    public static String KEY_OTL = "com.zhntd.bundle.key.otl";
 
     /**
      * @return OpsTemplates
@@ -71,7 +71,8 @@ public class OpsManager extends ActivityBase implements OnItemClickListener {
         mOpsList.add(new OpsTemplate(AppOpsState.PERSONAL_TEMPLATE, AppOpsManager.OP_READ_CALENDAR));
         mOpsList.add(new OpsTemplate(AppOpsState.PERSONAL_TEMPLATE, AppOpsManager.OP_WRITE_CALENDAR));
         mOpsList.add(new OpsTemplate(AppOpsState.PERSONAL_TEMPLATE, AppOpsManager.OP_READ_CLIPBOARD));
-        mOpsList.add(new OpsTemplate(AppOpsState.PERSONAL_TEMPLATE, AppOpsManager.OP_WRITE_CLIPBOARD));
+        mOpsList.add(new OpsTemplate(AppOpsState.PERSONAL_TEMPLATE,
+                AppOpsManager.OP_WRITE_CLIPBOARD));
 
         // media
         mOpsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
@@ -105,12 +106,10 @@ public class OpsManager extends ActivityBase implements OnItemClickListener {
                 AppOpsManager.OP_WIFI_CHANGE));
         mOpsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
                 AppOpsManager.OP_BLUETOOTH_CHANGE));
-        mOpsList.add(new OpsTemplate(AppOpsState.MEDIA_TEMPLATE,
-                AppOpsManager.OP_DATA_CONNECT_CHANGE));
-        
-        //location
+
+        // location
         mOpsList.add(new OpsTemplate(AppOpsState.LOCATION_TEMPLATE,
-                AppOpsManager.OP_COARSE_LOCATION,true));
+                AppOpsManager.OP_COARSE_LOCATION, true));
         mOpsList.add(new OpsTemplate(AppOpsState.LOCATION_TEMPLATE,
                 AppOpsManager.OP_FINE_LOCATION));
         mOpsList.add(new OpsTemplate(AppOpsState.LOCATION_TEMPLATE,
@@ -121,10 +120,10 @@ public class OpsManager extends ActivityBase implements OnItemClickListener {
                 AppOpsManager.OP_MONITOR_LOCATION));
         mOpsList.add(new OpsTemplate(AppOpsState.LOCATION_TEMPLATE,
                 AppOpsManager.OP_MONITOR_HIGH_POWER_LOCATION));
-        
-        //message
+
+        // message
         mOpsList.add(new OpsTemplate(AppOpsState.MESSAGING_TEMPLATE,
-                AppOpsManager.OP_READ_SMS,true));
+                AppOpsManager.OP_READ_SMS, true));
         mOpsList.add(new OpsTemplate(AppOpsState.MESSAGING_TEMPLATE,
                 AppOpsManager.OP_WRITE_SMS));
         mOpsList.add(new OpsTemplate(AppOpsState.MESSAGING_TEMPLATE,
@@ -144,10 +143,9 @@ public class OpsManager extends ActivityBase implements OnItemClickListener {
         mOpsList.add(new OpsTemplate(AppOpsState.MESSAGING_TEMPLATE,
                 AppOpsManager.OP_WRITE_MMS));
 
-        
-        //device
+        // device
         mOpsList.add(new OpsTemplate(AppOpsState.DEVICE_TEMPLATE,
-                AppOpsManager.OP_POST_NOTIFICATION,true));
+                AppOpsManager.OP_POST_NOTIFICATION, true));
         mOpsList.add(new OpsTemplate(AppOpsState.DEVICE_TEMPLATE,
                 AppOpsManager.OP_WRITE_SETTINGS));
         mOpsList.add(new OpsTemplate(AppOpsState.DEVICE_TEMPLATE,
@@ -158,10 +156,14 @@ public class OpsManager extends ActivityBase implements OnItemClickListener {
                 AppOpsManager.OP_WAKE_LOCK));
         mOpsList.add(new OpsTemplate(AppOpsState.DEVICE_TEMPLATE,
                 AppOpsManager.OP_CALL_PHONE));
-        
-        //bootup
+
+        // bootup
         mOpsList.add(new OpsTemplate(AppOpsState.BOOTUP_TEMPLATE,
-                AppOpsManager.OP_BOOT_COMPLETED,true));
+                AppOpsManager.OP_BOOT_COMPLETED, true));
+
+        // data connection
+        mOpsList.add(new OpsTemplate(AppOpsState.DATA_TEMPLATE,
+                AppOpsState.DATA_PERMISSION, true));
 
         // put a name for every permmission
         for (int i = 0; i < mOpsList.size(); i++) {
@@ -183,7 +185,7 @@ public class OpsManager extends ActivityBase implements OnItemClickListener {
     /**
      * time to show sth.
      */
-    void inflateList() {
+    private void inflateList() {
         createOpsListAndStrs();
         SummaryListAdapter mOpsListAdapter = new SummaryListAdapter(mOpsList, mOpsCate,
                 mOpsLabels, this);

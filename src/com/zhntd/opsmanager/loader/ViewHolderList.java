@@ -1,7 +1,6 @@
 
 package com.zhntd.opsmanager.loader;
 
-import android.R.integer;
 import android.content.Context;
 import android.view.View;
 import android.widget.AdapterView;
@@ -13,13 +12,14 @@ import android.widget.Switch;
 import android.widget.TextView;
 
 import com.zhntd.opsmanager.R;
+import com.zhntd.opsmanager.net.NetworkControlor;
 
 import android.app.AppOpsManager;
 
 /**
  * @author nick
  * @date Nov 6, 2014
- * @time 2:11:22 PM TODO fill out.
+ * @time 2:11:22 PM
  */
 public class ViewHolderList {
 
@@ -30,7 +30,8 @@ public class ViewHolderList {
     private ArrayAdapter<String> mAdapter;
     private String[] mStringArray;
 
-    public ViewHolderList(View convertView, Context c, final ItemSelectedListener callback, final int positionInList) {
+    public ViewHolderList(View convertView, Context c, final ItemSelectedListener callback,
+            final int positionInList) {
         titleView = (TextView) convertView.findViewById(R.id.title);
         iconView = (ImageView) convertView.findViewById(R.id.icon);
         spinner = (Spinner) convertView.findViewById(R.id.spinner);
@@ -50,32 +51,40 @@ public class ViewHolderList {
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-                // EMPTY
+                // NOTHING to do.
             }
         });
     }
 
     public void setCurrentMode(int mode) {
         int selection = 0;
+        // The mode(integer) defines in OpsManager and NetworkControlor are
+        // totally the same, So we ignore the type of the Op.
         switch (mode) {
             case AppOpsManager.MODE_ASK:
                 selection = 0;
                 break;
-                
+
             case AppOpsManager.MODE_IGNORED:
                 selection = 1;
                 break;
-                
+
             case AppOpsManager.MODE_ALLOWED:
                 selection = 2;
                 break;
 
             default:
+                selection = 0;
                 break;
         }
+        if (spinner != null)
         spinner.setSelection(selection);
     }
 
+    /**
+     * @author Nick
+     * Should be implement.
+     */
     public interface ItemSelectedListener {
         void onSpinnerItemSelect(int item, int positionInList);
     }

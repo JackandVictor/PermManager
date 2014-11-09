@@ -9,6 +9,7 @@
         <item>Messaging</item>
         <item>Device</item>
         <item>Bootup</item>
+        <item>Data</item>
     </string-array>
 
     <!-- User display names for app ops codes -->
@@ -36,7 +37,6 @@
         <item>bluetooth volume</item>
         <item>wifi change</item>
         <item>bluetooth change</item>
-        <item>data change</item>
         <item>coarse location</item>
         <item>fine location</item>
         <item>GPS</item>
@@ -60,6 +60,7 @@
         <item>keep awake</item>
         <item>call phone</item>
         <item>auto start</item>
+        <item>data</item>
     </string-array>
 
     <!-- User display names for app ops codes -->
@@ -87,7 +88,6 @@
         <item>Bluetooth volume</item>
         <item>Wifi change</item>
         <item>Bluetooth change</item>
-        <item>Data change</item>
         <item>Location</item>
         <item>Location</item>
         <item>Location</item>
@@ -114,6 +114,7 @@
         <item>Read MMS</item>
         <item>Write MMS</item>
         <item>Auto start</item>
+        <item>Data</item>
     </string-array>
     
     <!-- Names of op mode -->

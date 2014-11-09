@@ -8,7 +8,8 @@
         <item>"位置"</item>
         <item>"短信"</item>
         <item>"设备"</item>
-        <item>"启动"</item>
+        <item>"自启动"</item>
+        <item>"数据连接"</item>
     </string-array>
 
     <!-- User display names for app ops codes -->
@@ -36,7 +37,6 @@
         <item>"蓝牙音量"</item>
         <item>打开WiFi</item>
         <item>打开蓝牙</item>
-        <item>移动数据</item>
         <item>"粗略位置"</item>
         <item>"精准位置"</item>
         <item>"GPS"</item>
@@ -60,8 +60,8 @@
         <item>"保持唤醒状态"</item>
         <item>"拨打电话"</item>
         <item>自启动</item>
+        <item>移动数据</item>
     </string-array>
-    
 
     <!-- User display names for app ops codes -->
     <string-array name="app_ops_labels">
@@ -88,7 +88,6 @@
         <item>"蓝牙音量"</item>
         <item>打开WiFi</item>
         <item>打开蓝牙</item>
-        <item>移动数据</item>
         <item>"粗略位置"</item>
         <item>"精准位置"</item>
         <item>"GPS"</item>
@@ -112,14 +111,14 @@
         <item>"保持唤醒状态"</item>
         <item>"拨打电话"</item>
         <item>自启动</item>
+        <item>移动数据</item>
     </string-array>
-    
+
     <!-- Names of op mode -->
     <string-array name="app_ops_mode">
         <item>"询问"</item>
         <item>"禁止"</item>
         <item>"允许"</item>
     </string-array>
-    
 
 </resources>

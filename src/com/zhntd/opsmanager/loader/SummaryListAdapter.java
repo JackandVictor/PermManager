@@ -16,6 +16,9 @@ import com.zhntd.opsmanager.R;
 
 import android.app.AppOpsManager;
 
+/**
+ * @author zhntd Permission summary list adapter
+ */
 public class SummaryListAdapter extends BaseAdapter {
 
     private List<OpsTemplate> mOpsList;
@@ -68,6 +71,9 @@ public class SummaryListAdapter extends BaseAdapter {
         return position;
     }
 
+    /**
+     * place holder
+     */
     final static class ViewHolder {
         TextView lebelTextView;
         TextView countTextView;
@@ -84,7 +90,6 @@ public class SummaryListAdapter extends BaseAdapter {
             viewHolder.lebelTextView = (TextView) convertView.findViewById(R.id.ops_label);
             viewHolder.countTextView = (TextView) convertView.findViewById(R.id.ops_count);
             viewHolder.headerTextView = (TextView) convertView.findViewById(R.id.ops_cate);
-
             convertView.setTag(viewHolder);
         } else {
             viewHolder = (ViewHolder) convertView.getTag();
@@ -92,6 +97,7 @@ public class SummaryListAdapter extends BaseAdapter {
 
         viewHolder.lebelTextView.setText(mOpsLabels[position]);
         final OpsTemplate otl = mOpsList.get(position);
+        // chk if we need to show a head title for this item.
         if (otl.isAhead()) {
             viewHolder.headerTextView.setText(mOpsCates[mOpsList.get(position).getPermCategorie()]);
             viewHolder.headerTextView.setVisibility(View.VISIBLE);
@@ -112,14 +118,19 @@ public class SummaryListAdapter extends BaseAdapter {
                         if (otl != null)
                             otl.setAppsCount(count);
                     }
-                    
+
                     @Override
                     public void onListPreLoad() {
                         // TODO make it in res
-                        if (viewHolder.countTextView != null)
+                        if (viewHolder.countTextView == null)
+                            return;
+                        if (otl.getAppsCount() >= 0) {
+                            // if we already has a count, no need to load.
+                            viewHolder.countTextView.setText(otl.getAppsCount() + "");
+                        } else {
                             viewHolder.countTextView.setText("loading");
+                        }
                     }
-
                 }, OpsLoader.FLAG_GET_COUNT);
 
         return convertView;

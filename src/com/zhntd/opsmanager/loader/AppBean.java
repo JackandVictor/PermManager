@@ -3,6 +3,11 @@ package com.zhntd.opsmanager.loader;
 
 import android.graphics.drawable.Drawable;
 
+/**
+ * Describe an application with some tags.
+ * 
+ * @author zhntd
+ */
 public class AppBean {
 
     private String displayName;
@@ -10,9 +15,11 @@ public class AppBean {
     private String appSummary;
     private int uid;
     private String packageName;
-    private int mode;
+    /* ALLOWED/DENIED/ASK */
+    private int currentMode;
 
     public AppBean() {
+        // EMPTY we use getter and setter.
     }
 
     /**
@@ -26,14 +33,14 @@ public class AppBean {
      * @return the mode
      */
     public int getMode() {
-        return mode;
+        return currentMode;
     }
 
     /**
      * @param mode the mode to set
      */
     public void setMode(int mode) {
-        this.mode = mode;
+        this.currentMode = mode;
     }
 
     /**

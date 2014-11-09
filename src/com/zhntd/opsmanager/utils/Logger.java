@@ -10,7 +10,7 @@ import android.util.Log;
  */
 public class Logger {
 
-    private static final String TAG = "com.nick.logger.tag";
+    private static final String TAG = "com.zhntd.permmanager.logger.tag";
     private static final boolean DEBUG = true;
 
     /**

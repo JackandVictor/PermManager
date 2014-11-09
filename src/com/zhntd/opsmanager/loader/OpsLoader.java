@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+import com.zhntd.opsmanager.AppOpsState;
 import com.zhntd.opsmanager.OpsTemplate;
+import com.zhntd.opsmanager.net.NetworkControlor;
 import com.zhntd.opsmanager.utils.Logger;
 
 import android.Manifest;
@@ -19,9 +21,12 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.R.color;
+import android.R.integer;
 import android.app.AppOpsManager;
 
 /**
+ * We use this loader to load permissions and applications.
+ * 
  * @author zhntd
  * @date Nov 6, 2014
  * @time 5:01:12 PM
@@ -32,11 +37,16 @@ public class OpsLoader {
     public static final int FLAG_GET_COUNT = 1;
 
     private static final OpsLoader mLoader = new OpsLoader();
+    
+    private static NetworkControlor mNetworkControlor;
 
     public static OpsLoader getInstance() {
         return mLoader;
     }
 
+    /**
+     * Should be implements if call the loader.
+     */
     public interface AppLoaderCallback {
         void onListPreLoad();
 
@@ -49,20 +59,20 @@ public class OpsLoader {
      * @param packageManager
      * @param otl
      * @param callback Must not be null.
-     * @param flag What you want? full list or just a count?
+     * @param flag What you want to get? full list or just a count?
      */
     public void buildAppList(Context context, AppOpsManager appOps,
             PackageManager packageManager, OpsTemplate otl, AppLoaderCallback callback, int flag) {
 
-        // special part..such as: INTERNET
-        if (AppOpsManager.OP_DATA_CONNECT_CHANGE == otl.getPermLabel()) {
+        // special part..such as: INTERNET, we can control here.
+        if (AppOpsState.DATA_PERMISSION == otl.getPermLabel()) {
             String permission = Manifest.permission.INTERNET;
             new SpecialPermissionAppsLoader(permission, context, packageManager, callback)
                     .execute();
             return;
         }
 
-        // we use opsManager for this part.
+        // we use opsManager to load for this part.
         switch (flag) {
             case FLAG_GET_LIST:
                 new AppListLoader(context, appOps, packageManager, otl, callback)
@@ -70,7 +80,7 @@ public class OpsLoader {
                 break;
 
             case FLAG_GET_COUNT:
-                new SimpleAppListLoader(context, appOps, packageManager, otl, callback)
+                new AppsCounter(context, appOps, packageManager, otl, callback)
                         .execute();
 
             default:
@@ -80,14 +90,14 @@ public class OpsLoader {
     }
 
     /**
-     * A custom Loader that loads all of the very perm applications.
+     * A custom Loader that loads all applications related to the perm, will
+     * return a count.
      */
-    private static class SimpleAppListLoader extends AsyncTask<Void, Void, Integer> {
+    private static class AppsCounter extends AsyncTask<Void, Void, Integer> {
 
         private AppOpsManager mAppOps;
         private PackageManager mPackageManager;
         private OpsTemplate otl;
-        private List<AppBean> mApps;
         private AppLoaderCallback mAppLoaderCallback;
 
         /**
@@ -96,7 +106,7 @@ public class OpsLoader {
          * @param mPackageManager
          * @param otl
          */
-        public SimpleAppListLoader(Context context, AppOpsManager appOps,
+        public AppsCounter(Context context, AppOpsManager appOps,
                 PackageManager packageManager, OpsTemplate otl, AppLoaderCallback callback) {
             this.mAppOps = appOps;
             this.mPackageManager = packageManager;
@@ -119,6 +129,7 @@ public class OpsLoader {
                         info = mPackageManager.getApplicationInfo(
                                 pkgOps.getPackageName(), PackageManager.GET_UNINSTALLED_PACKAGES);
                     } catch (NameNotFoundException e) {
+                        Logger.logger("Got a NameNotFoundExp when get application info...");
                         continue;
                     }
                     // ignore system apps.
@@ -144,9 +155,10 @@ public class OpsLoader {
         @Override
         protected void onPostExecute(Integer result) {
             super.onPostExecute(result);
+            /* We return a null list, So make sure no one use this list. */
             if (mAppLoaderCallback != null)
                 mAppLoaderCallback.onAppsListLoadFinish(null, result);
-            Logger.logger("load apps count finish got a result:-->" + result);
+            Logger.logger("load apps count finish got a count of" + result);
         }
     }
 
@@ -158,8 +170,8 @@ public class OpsLoader {
         private AppOpsManager mAppOps;
         private PackageManager mPackageManager;
         private OpsTemplate otl;
-        private List<AppBean> mApps;
         private AppLoaderCallback mAppLoaderCallback;
+        private Context mContext;
 
         /**
          * @param context
@@ -173,6 +185,7 @@ public class OpsLoader {
             this.mPackageManager = packageManager;
             this.otl = otl;
             this.mAppLoaderCallback = callback;
+            this.mContext = context;
         }
 
         private final List<AppBean> buildAppList(OpsTemplate otl) {
@@ -190,24 +203,35 @@ public class OpsLoader {
                         info = mPackageManager.getApplicationInfo(
                                 pkgOps.getPackageName(), PackageManager.GET_UNINSTALLED_PACKAGES);
                     } catch (NameNotFoundException e) {
+                        Logger.logger("Got a NameNotFoundExp when get application info...");
                         continue;
                     }
                     // ignore system apps.
                     if (info != null && filterApp(info)) {
-                        AppBean appBean = new AppBean();
-                        String label = info.loadLabel(mPackageManager).toString();
-                        String displayName = label != null ? label : info.packageName;
+                        final AppBean appBean = new AppBean();
+                        final String label = info.loadLabel(mPackageManager).toString();
+                        final String displayName = label != null ? label : info.packageName;
                         appBean.setDisplayName(displayName);
                         appBean.setDisplayIcon(info.loadIcon(mPackageManager));
                         appBean.setUid(info.uid);
                         appBean.setPackageName(info.packageName);
                         appBean.setMode(AppOpsManager.MODE_ALLOWED);
-                        List<AppOpsManager.OpEntry> entries = pkgOps.getOps();
-                        if (entries != null) {
-                            for (int j = 0; j < entries.size(); j++) {
-                                AppOpsManager.OpEntry ope = entries.get(j);
-                                if (ope.getOp() == otl.getPermLabel()) {
-                                    appBean.setMode(ope.getMode());
+
+                        if (AppOpsState.DATA_PERMISSION == otl.getPermLabel()) {
+                            // load data control operation mode.
+                            if (mNetworkControlor == null)
+                                mNetworkControlor = new NetworkControlor(mContext);
+                            int uid = info.uid;
+                            int mode = mNetworkControlor.getCurrentMode(uid);
+                            appBean.setMode(mode);
+                        } else {
+                            List<AppOpsManager.OpEntry> entries = pkgOps.getOps();
+                            if (entries != null) {
+                                for (int j = 0; j < entries.size(); j++) {
+                                    AppOpsManager.OpEntry ope = entries.get(j);
+                                    if (ope.getOp() == otl.getPermLabel()) {
+                                        appBean.setMode(ope.getMode());
+                                    }
                                 }
                             }
                         }
@@ -238,11 +262,13 @@ public class OpsLoader {
         }
     }
 
+    /**
+     * Loader to load some permission that the OpsManager do not supply.
+     */
     private static class SpecialPermissionAppsLoader extends AsyncTask<Void, Void, List<AppBean>> {
 
         private PackageManager mPackageManager;
         private String mPermission;
-        private Context mContext;
         private AppLoaderCallback mCallback;
 
         /**
@@ -253,7 +279,6 @@ public class OpsLoader {
         public SpecialPermissionAppsLoader(String mPermission, Context c,
                 PackageManager packageManager, AppLoaderCallback callback) {
             this.mPermission = mPermission;
-            this.mContext = c;
             this.mPackageManager = packageManager;
             this.mCallback = callback;
         }
@@ -285,6 +310,8 @@ public class OpsLoader {
          */
         private List<AppBean> buildGivenPermAppsList(String permissionm,
                 PackageManager packageManager) {
+            if (packageManager == null)
+                return null;
 
             final List<AppBean> apps = new ArrayList<AppBean>();
             final List<ApplicationInfo> installed = packageManager
@@ -308,7 +335,7 @@ public class OpsLoader {
                 app.setDisplayIcon(info.loadIcon(mPackageManager));
                 app.setUid(info.uid);
                 app.setPackageName(info.packageName);
-
+                // finally we can add to the list.
                 apps.add(app);
             }
             return apps;
@@ -319,7 +346,7 @@ public class OpsLoader {
      * We only need to get a thrid-party app.
      * 
      * @param info
-     * @return
+     * @return if this is a 3-rd party app.
      */
     public static boolean filterApp(ApplicationInfo info) {
         if ((info.flags & ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0) {

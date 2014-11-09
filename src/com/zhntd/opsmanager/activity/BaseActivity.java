@@ -4,12 +4,14 @@ package com.zhntd.opsmanager.activity;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.MenuItem;
 
-public class ActivityBase extends Activity {
-    public static final String LOGTAG = "com.nick.tweak.logtag";
-    private final boolean DEBUG = true;
+/**
+ * A base styled activity.
+ * 
+ * @author zhntd
+ */
+public class BaseActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -17,10 +19,24 @@ public class ActivityBase extends Activity {
         styleActionbar(getActionBar());
     }
 
-    void styleActionbar(ActionBar actionBar) {
+    /**
+     * Follow the Settings style.
+     * 
+     * @param actionBar
+     */
+    private void styleActionbar(ActionBar actionBar) {
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setHomeButtonEnabled(true);
         actionBar.setDisplayShowHomeEnabled(true);
+    }
+
+    /**
+     * Set title of the action bar
+     * 
+     * @param title
+     */
+    protected void setTitle(String title) {
+        getActionBar().setTitle(title);
     }
 
     @Override
@@ -29,9 +45,5 @@ public class ActivityBase extends Activity {
         if (id == android.R.id.home)
             finish();
         return super.onOptionsItemSelected(item);
-    }
-    
-    final void LogOutput(String log) {
-        if (DEBUG) Log.i(LOGTAG, log);
     }
 }
