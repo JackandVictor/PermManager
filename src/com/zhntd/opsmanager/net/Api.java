@@ -231,7 +231,7 @@ public final class Api {
                 "rmnet+", "pdp+", "ppp+", "uwbr+", "wimax+"
         };
         final SharedPreferences prefs = ctx.getSharedPreferences(PREFS_NAME, 0);
-        final boolean whitelist = prefs.getString(PREF_MODE, MODE_WHITELIST).equals(MODE_WHITELIST);
+        final boolean whitelist = prefs.getString(PREF_MODE, MODE_BLACKLIST).equals(MODE_WHITELIST);
         final boolean blacklist = !whitelist;
         final boolean logenabled = ctx.getSharedPreferences(PREFS_NAME, 0).getBoolean(
                 PREF_LOGENABLED, false);

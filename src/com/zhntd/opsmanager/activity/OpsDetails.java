@@ -43,7 +43,7 @@ public class OpsDetails extends BaseActivity implements AppLoaderCallback {
     }
 
     /**
-     * initial && mess things
+     * initial mess things here.
      */
     private void init() {
         mAppOps = (AppOpsManager) this.getSystemService(Context.APP_OPS_SERVICE);
