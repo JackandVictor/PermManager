@@ -5,6 +5,10 @@ LOCAL_MODULE_TAGS := optional
 
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
+LOCAL_SRC_FILES += \
+    src/com/zhntd/opsmanager/service/IPermManagerService
+
+
 LOCAL_STATIC_JAVA_LIBRARIES := \
     android-common \
     guava \

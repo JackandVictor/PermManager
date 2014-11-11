@@ -2,8 +2,7 @@
 <resources>
 
     <string name="app_name">Permission manager</string>
-    <!-- Dev tweak res -->
-    <string name="dev_tweak_title">Permission manager</string>
+    <string name="manager_title">Permission manager</string>
     <string name="title_apps">Applications</string>
     <string name="title_activity_net_manager">NetManager</string>
     <string name="title_section1">Mobile</string>
