@@ -25,7 +25,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.zhntd.opsmanager.activity.OpsDetails"
+            android:name="com.zhntd.opsmanager.activity.OpsDetailsActivity"
             android:excludeFromRecents="true"
             android:icon="@mipmap/ic_launcher_settings"
             android:label="@string/title_apps"
@@ -34,7 +34,8 @@
         <activity
             android:name="com.zhntd.opsmanager.activity.NetManagerActivity"
             android:icon="@mipmap/ic_launcher_settings"
-            android:label="@string/title_activity_net_manager" >
+            android:label="@string/title_activity_net_manager"
+            android:configChanges="locale|screenSize|orientation" >
         </activity>
 
         <service

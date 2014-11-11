@@ -30,55 +30,55 @@ import android.view.WindowManager;
 import android.widget.Button;
 
 class BasePermissionDialog extends AlertDialog {
-    public BasePermissionDialog(Context context) {
-        super(context, com.android.internal.R.style.Theme_Dialog_AppError);
-        getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM,
-                WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
-        WindowManager.LayoutParams attrs = getWindow().getAttributes();
-        attrs.setTitle("Permission Dialog");
-        getWindow().setAttributes(attrs);
-        setIconAttribute(R.attr.alertDialogIcon);
-    }
+	public BasePermissionDialog(Context context) {
+		super(context, com.android.internal.R.style.Theme_Dialog_AppError);
+		getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
+		getWindow().setFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM,
+				WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
+		WindowManager.LayoutParams attrs = getWindow().getAttributes();
+		attrs.setTitle("Permission Dialog");
+		getWindow().setAttributes(attrs);
+		setIconAttribute(R.attr.alertDialogIcon);
+	}
 
-    public void onStart() {
-        super.onStart();
-        setEnabled(false);
-        mHandler.sendMessageDelayed(mHandler.obtainMessage(0), 1000);
-    }
+	public void onStart() {
+		super.onStart();
+		setEnabled(false);
+		mHandler.sendMessageDelayed(mHandler.obtainMessage(0), 1000);
+	}
 
-    public boolean dispatchKeyEvent(KeyEvent event) {
-        if (mConsuming) {
-            //Slog.i(TAG, "Consuming: " + event);
-            return true;
-        }
-        //Slog.i(TAG, "Dispatching: " + event);
-        return super.dispatchKeyEvent(event);
-    }
+	public boolean dispatchKeyEvent(KeyEvent event) {
+		if (mConsuming) {
+			// Slog.i(TAG, "Consuming: " + event);
+			return true;
+		}
+		// Slog.i(TAG, "Dispatching: " + event);
+		return super.dispatchKeyEvent(event);
+	}
 
-    private void setEnabled(boolean enabled) {
-        Button b = (Button)findViewById(R.id.button1);
-        if (b != null) {
-            b.setEnabled(enabled);
-        }
-        b = (Button)findViewById(R.id.button2);
-        if (b != null) {
-            b.setEnabled(enabled);
-        }
-        b = (Button)findViewById(R.id.button3);
-        if (b != null) {
-            b.setEnabled(enabled);
-        }
-    }
+	private void setEnabled(boolean enabled) {
+		Button b = (Button) findViewById(R.id.button1);
+		if (b != null) {
+			b.setEnabled(enabled);
+		}
+		b = (Button) findViewById(R.id.button2);
+		if (b != null) {
+			b.setEnabled(enabled);
+		}
+		b = (Button) findViewById(R.id.button3);
+		if (b != null) {
+			b.setEnabled(enabled);
+		}
+	}
 
-    private Handler mHandler = new Handler() {
-        public void handleMessage(Message msg) {
-            if (msg.what == 0) {
-                mConsuming = false;
-                setEnabled(true);
-            }
-        }
-    };
+	private Handler mHandler = new Handler() {
+		public void handleMessage(Message msg) {
+			if (msg.what == 0) {
+				mConsuming = false;
+				setEnabled(true);
+			}
+		}
+	};
 
-    private boolean mConsuming = true;
+	private boolean mConsuming = true;
 }

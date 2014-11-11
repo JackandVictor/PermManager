@@ -3,9 +3,21 @@
     tools:context="com.zhntd.opsmanager.NetManagerActivity" >
 
     <item
-        android:id="@+id/action_settings"
+        android:id="@+id/action_ask_all"
         android:orderInCategory="100"
-        android:showAsAction="never"
-        android:title="@string/action_settings"/>
+        android:showAsAction="ifRoom"
+        android:title="@string/action_ask_all"/>
+    
+    <item
+        android:id="@+id/action_deny_all"
+        android:orderInCategory="100"
+        android:showAsAction="ifRoom"
+        android:title="@string/action_deny_all"/>
+    
+    <item
+        android:id="@+id/action_allow_all"
+        android:orderInCategory="100"
+        android:showAsAction="ifRoom"
+        android:title="@string/action_allow_all"/>
 
 </menu>

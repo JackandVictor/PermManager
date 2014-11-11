@@ -30,111 +30,123 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Resources;
 import android.os.Handler;
 import android.os.Message;
+import android.os.RemoteException;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.CheckBox;
 import android.widget.TextView;
 
+import com.zhntd.opsmanager.service.IPermManagerService;
+
 class PermissionDialog extends BasePermissionDialog {
-    private final static String TAG = "PermissionDialog";
+	private final static String TAG = "PermissionDialog";
 
-    private PermManagerService mPermManagerService;
-    private final String mPackageName;
-    private final int mCode;
-    private int mUid;
-    final CharSequence[] mOpLabels;
-    private Context mContext;
-    private CheckBox mCheckBox;
+	private IPermManagerService mPermManagerService;
+	private final String mPackageName;
+	private final int mCode;
+	private int mUid;
+	final CharSequence[] mOpLabels;
+	private Context mContext;
+	private CheckBox mCheckBox;
 
-    // Event 'what' codes
-    static final int ACTION_ALLOWED = 0x2;
-    static final int ACTION_IGNORED = 0x4;
-    static final int ACTION_IGNORED_TIMEOUT = 0x8;
+	// Event 'what' codes
+	static final int ACTION_ALLOWED = 0x2;
+	static final int ACTION_IGNORED = 0x4;
+	static final int ACTION_IGNORED_TIMEOUT = 0x8;
 
-    // 1-minute timeout, then we automatically dismiss the permission
-    // dialog
-    static final long DISMISS_TIMEOUT = 1000 * 60 * 1;
+	// 1-minute timeout, then we automatically dismiss the permission
+	// dialog
+	static final long DISMISS_TIMEOUT = 1000 * 60 * 1;
 
-    public PermissionDialog(Context context, PermManagerService service,
-            int code, int uid, String packageName) {
-        super(context);
+	public PermissionDialog(Context context, IPermManagerService service,
+			int code, int uid, String packageName) {
+		super(context);
 
-        mContext = context;
-        Resources res = context.getResources();
+		mContext = context;
+		Resources res = context.getResources();
 
-        mPermManagerService = service;
-        mCode = code;
-        mPackageName = packageName;
-        mUid = uid;
-        mOpLabels = res.getTextArray(
-            com.android.internal.R.array.app_ops_labels);
+		mPermManagerService = service;
+		mCode = code;
+		mPackageName = packageName;
+		mUid = uid;
+		mOpLabels = res
+				.getTextArray(com.android.internal.R.array.app_ops_labels);
 
-        setCancelable(false);
+		setCancelable(false);
 
-        setButton(DialogInterface.BUTTON_POSITIVE,
-                  res.getString(com.android.internal.R.string.allow), mHandler.obtainMessage(ACTION_ALLOWED));
+		setButton(DialogInterface.BUTTON_POSITIVE,
+				res.getString(com.android.internal.R.string.allow),
+				mHandler.obtainMessage(ACTION_ALLOWED));
 
-        setButton(DialogInterface.BUTTON_NEGATIVE,
-                    res.getString(com.android.internal.R.string.deny), mHandler.obtainMessage(ACTION_IGNORED));
+		setButton(DialogInterface.BUTTON_NEGATIVE,
+				res.getString(com.android.internal.R.string.deny),
+				mHandler.obtainMessage(ACTION_IGNORED));
 
-        setTitle(res.getString(com.android.internal.R.string.permission));
-        WindowManager.LayoutParams attrs = getWindow().getAttributes();
-        attrs.setTitle("Permission info: " + getAppName(mPackageName));
-        attrs.privateFlags |= WindowManager.LayoutParams.PRIVATE_FLAG_SYSTEM_ERROR
-                | WindowManager.LayoutParams.PRIVATE_FLAG_SHOW_FOR_ALL_USERS;
-        getWindow().setAttributes(attrs);
+		setTitle(res.getString(com.android.internal.R.string.permission));
+		WindowManager.LayoutParams attrs = getWindow().getAttributes();
+		attrs.setTitle("Permission info: " + getAppName(mPackageName));
+		attrs.privateFlags |= WindowManager.LayoutParams.PRIVATE_FLAG_SYSTEM_ERROR
+				| WindowManager.LayoutParams.PRIVATE_FLAG_SHOW_FOR_ALL_USERS;
+		getWindow().setAttributes(attrs);
 
-        String name = getAppName(mPackageName);
-        if(name == null)
-            name = mPackageName;
-        setMessage(name + ": " + mOpLabels[mCode]);
-        mCheckBox = new CheckBox(mContext);
-        mCheckBox.setText("记住选择");
-        setView(mCheckBox);
+		String name = getAppName(mPackageName);
+		if (name == null)
+			name = mPackageName;
+		setMessage(name + ": " + mOpLabels[mCode]);
+		mCheckBox = new CheckBox(mContext);
+		mCheckBox.setText("记住选择");
+		setView(mCheckBox);
 
-        // After the timeout, pretend the user clicked the quit button
-        //mHandler.sendMessageDelayed(
-        //        mHandler.obtainMessage(ACTION_IGNORED_TIMEOUT),
-        //        DISMISS_TIMEOUT);
-    }
+		// After the timeout, pretend the user clicked the quit button
+		// mHandler.sendMessageDelayed(
+		// mHandler.obtainMessage(ACTION_IGNORED_TIMEOUT),
+		// DISMISS_TIMEOUT);
+	}
 
-    private String getAppName(String packageName) {
-        ApplicationInfo appInfo = null;
-        PackageManager pm = mContext.getPackageManager();
-        try {
-            appInfo = pm.getApplicationInfo(packageName,
-                      PackageManager.GET_DISABLED_COMPONENTS
-                      | PackageManager.GET_UNINSTALLED_PACKAGES);
-        } catch (final NameNotFoundException e) {
-            return null;
-        }
-        if(appInfo != null) {
-            return  (String)pm.getApplicationLabel(appInfo);
-        }
-        return null;
-    }
+	private String getAppName(String packageName) {
+		ApplicationInfo appInfo = null;
+		PackageManager pm = mContext.getPackageManager();
+		try {
+			appInfo = pm.getApplicationInfo(packageName,
+					PackageManager.GET_DISABLED_COMPONENTS
+							| PackageManager.GET_UNINSTALLED_PACKAGES);
+		} catch (final NameNotFoundException e) {
+			return null;
+		}
+		if (appInfo != null) {
+			return (String) pm.getApplicationLabel(appInfo);
+		}
+		return null;
+	}
 
-    private final Handler mHandler = new Handler() {
-        public void handleMessage(Message msg) {
-            int mode;
-            boolean remember = false;
-            if(mCheckBox.isChecked()){
-                remember = true;
-            }
-            switch(msg.what) {
-                case ACTION_ALLOWED:
-                    mode = AppOpsManager.MODE_ALLOWED;
-                    break;
-                case ACTION_IGNORED:
-                    mode = AppOpsManager.MODE_IGNORED;
-                    break;
-                default:
-                    mode = AppOpsManager.MODE_IGNORED;
-                    remember = false;
-            }
-           /* mPermManagerService.notifyOperation(mCode, mUid, mPackageName, mode,
-                remember);*/
-            dismiss();
-        }
-    };
+	private final Handler mHandler = new Handler() {
+		public void handleMessage(Message msg) {
+			int mode;
+			boolean remember = false;
+			if (mCheckBox.isChecked()) {
+				remember = true;
+			}
+			switch (msg.what) {
+			case ACTION_ALLOWED:
+				mode = AppOpsManager.MODE_ALLOWED;
+				break;
+			case ACTION_IGNORED:
+				mode = AppOpsManager.MODE_IGNORED;
+				break;
+			default:
+				mode = AppOpsManager.MODE_IGNORED;
+				remember = false;
+			}
+
+			int type = 1;
+			try {
+				mPermManagerService.notifyOperation(mCode, mUid, mPackageName,
+						remember, type);
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
+
+			dismiss();
+		}
+	};
 }

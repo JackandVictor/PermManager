@@ -4,8 +4,8 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.widget.Toast;
 
-import com.zhntd.opsmanager.net.DataType;
 import com.zhntd.opsmanager.net.NetworkControlor;
 import com.zhntd.opsmanager.utils.Logger;
 
@@ -28,7 +28,7 @@ public class PermManagerService extends Service {
 		}
 	}
 
-	//private IPermManagerService.Stub mBinderStub = new ServiceStub();
+	private IPermManagerService.Stub mBinderStub = new ServiceStub();
 
 	@Override
 	public void onDestroy() {
@@ -53,18 +53,25 @@ public class PermManagerService extends Service {
 
 	@Override
 	public IBinder onBind(Intent arg0) {
-		return null;
+		return mBinderStub;
 	}
 
 	/**
 	 * Implements
 	 */
-	/*final class ServiceStub extends IPermManagerService.Stub {
+	final class ServiceStub extends IPermManagerService.Stub {
 
 		@Override
 		public void notifyOperation(int mode, int uid, String packageName,
-				boolean remember, DataType dataType) throws RemoteException {
+				boolean remember, int dataType) throws RemoteException {
 			// handle notify.
 		}
-	}*/
+
+		@Override
+		public void showFibDialog(int uid, String packageName, String permName,
+				int type) throws RemoteException {
+			// handle notify.
+			Toast.makeText(getApplicationContext(), "success set mode", Toast.LENGTH_SHORT).show();
+		}
+	}
 }

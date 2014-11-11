@@ -3,10 +3,8 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE_TAGS := optional
 
-LOCAL_SRC_FILES := $(call all-java-files-under, src)
-
-LOCAL_SRC_FILES += \
-    src/com/zhntd/opsmanager/service/IPermManagerService
+LOCAL_SRC_FILES := $(call all-java-files-under, src) \
+    src/com/zhntd/opsmanager/service/IPermManagerService.aidl
 
 
 LOCAL_STATIC_JAVA_LIBRARIES := \

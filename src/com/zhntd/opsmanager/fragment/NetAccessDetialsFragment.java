@@ -3,7 +3,6 @@ package com.zhntd.opsmanager.fragment;
 import java.util.List;
 
 import com.zhntd.opsmanager.loader.PermDetailListAdapter;
-import com.zhntd.opsmanager.net.DataType;
 
 import android.app.Activity;
 import android.app.AppOpsManager;
@@ -12,22 +11,26 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.zhntd.opsmanager.OpsTemplate;
 import com.zhntd.opsmanager.R;
 import com.zhntd.opsmanager.loader.AppBean;
 import com.zhntd.opsmanager.loader.OpsLoader;
 import com.zhntd.opsmanager.loader.OpsLoader.AppLoaderCallback;
+import com.zhntd.opsmanager.net.NetworkControlor;
+import com.zhntd.opsmanager.net.NetworkControlor.WorkFinishedCallback;
 
 public class NetAccessDetialsFragment extends Fragment implements
-		OpsLoader.AppLoaderCallback {
+		OpsLoader.AppLoaderCallback, WorkFinishedCallback {
 
 	/* data type of this page. */
-	private DataType mDataType;
+	private int mDataType;
 	private Context mContext;
 
 	private View mRootView;
@@ -41,7 +44,9 @@ public class NetAccessDetialsFragment extends Fragment implements
 
 	private OpsTemplate mOtl;
 
-	public NetAccessDetialsFragment(DataType mDataType, OpsTemplate otl) {
+	private List<AppBean> mApps;
+
+	public NetAccessDetialsFragment(int mDataType, OpsTemplate otl) {
 		super();
 		this.mDataType = mDataType;
 		this.mOtl = otl;
@@ -89,8 +94,9 @@ public class NetAccessDetialsFragment extends Fragment implements
 
 	@Override
 	public void onListPreLoad() {
-		mProgressDialog = ProgressDialog.show(getActivity(), "Loading...",
-				"Loading");
+		mProgressDialog = ProgressDialog.show(getActivity(), getResources()
+				.getString(R.string.dialog_title_list_loading), getResources()
+				.getString(R.string.dialog_content_list_loading));
 	}
 
 	@Override
@@ -99,5 +105,31 @@ public class NetAccessDetialsFragment extends Fragment implements
 		mPermDetailListAdapter = new PermDetailListAdapter(apps, mContext,
 				mAppOps, mOtl, mDataType);
 		mListView.setAdapter(mPermDetailListAdapter);
+		mApps = apps;
+	}
+
+	/**
+	 * @param mode
+	 */
+	public void applySettingsForAll(int mode) {
+		NetworkControlor networkControlor = NetworkControlor.get(mContext);
+		networkControlor.applyRulesForAllAsync(this, mode, mDataType, mContext);
+	}
+
+	@Override
+	public void onWorkDone() {
+		mProgressDialog.dismiss();
+		// give a tip to user.
+		Toast.makeText(getActivity(),
+				getResources().getString(R.string.work_done_success),
+				Toast.LENGTH_SHORT).show();
+		StartLoading(mOtl);
+	}
+
+	@Override
+	public void onWorkPrepare() {
+		mProgressDialog = ProgressDialog.show(getActivity(), getResources()
+				.getString(R.string.dialog_title_handling), getResources()
+				.getString(R.string.dialog_content_handling));
 	}
 }

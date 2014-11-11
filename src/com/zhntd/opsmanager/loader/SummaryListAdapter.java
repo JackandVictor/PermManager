@@ -13,7 +13,7 @@ import android.widget.TextView;
 import com.zhntd.opsmanager.AppOpsState;
 import com.zhntd.opsmanager.OpsTemplate;
 import com.zhntd.opsmanager.R;
-import com.zhntd.opsmanager.net.DataType;
+import com.zhntd.opsmanager.net.NetworkControlor.DataType;
 
 import android.app.AppOpsManager;
 

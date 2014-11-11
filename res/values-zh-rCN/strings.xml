@@ -1,6 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">"权限管理"</string>
-     <string name="title_apps">Applications</string>
+    <string name="app_name">权限管理</string>
+    <string name="manager_title">权限管理</string>
+    <string name="title_apps">应用</string>
+    <string name="title_activity_net_manager">网络控制</string>
+    <string name="title_section1">手机</string>
+    <string name="title_section2">Wifi</string>
+    <string name="action_ask_all">全部询问</string>
+    <string name="action_deny_all">全部拒绝</string>
+    <string name="action_allow_all">全部允许</string>
+    <string name="dialog_title_list_loading">提示</string>
+    <string name="dialog_content_list_loading">正在努力加载</string>
+    <string name="dialog_title_handling">提示</string>
+    <string name="dialog_content_handling">正在应用更改</string>
+    <string name="work_done_success">更改成功</string>
 
 </resources>

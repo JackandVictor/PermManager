@@ -1,9 +1,11 @@
 package com.zhntd.opsmanager.activity;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 import com.zhntd.opsmanager.fragment.NetAccessDetialsFragment;
-import com.zhntd.opsmanager.net.DataType;
+import com.zhntd.opsmanager.net.NetworkControlor.DataType;
 
 import android.app.ActionBar;
 import android.app.Fragment;
@@ -34,24 +36,25 @@ public class NetManagerActivity extends BaseActivity implements
 	 * becomes too memory intensive, it may be best to switch to a
 	 * {@link android.support.v13.app.FragmentStatePagerAdapter}.
 	 */
-	SectionsPagerAdapter mSectionsPagerAdapter;
+	private SectionsPagerAdapter mSectionsPagerAdapter;
 
 	/**
 	 * The {@link ViewPager} that will host the section contents.
 	 */
-	ViewPager mViewPager;
-	
+	private ViewPager mViewPager;
+	private List<NetAccessDetialsFragment> mFragments = new ArrayList<NetAccessDetialsFragment>();
+
 	private OpsTemplate mOtl;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_net_manager);
-		
+
 		Bundle bundle = getIntent().getExtras();
-        mOtl = (OpsTemplate) bundle.getSerializable(OpsManager.KEY_OTL);
-        if (mOtl.getPermName() != null)
-            setTitle(mOtl.getPermName());
+		mOtl = (OpsTemplate) bundle.getSerializable(OpsManager.KEY_OTL);
+		if (mOtl.getPermName() != null)
+			setTitle(mOtl.getPermName());
 
 		// Set up the action bar.
 		final ActionBar actionBar = getActionBar();
@@ -89,26 +92,6 @@ public class NetManagerActivity extends BaseActivity implements
 	}
 
 	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.net_manager, menu);
-		return true;
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		// Handle action bar item clicks here. The action bar will
-		// automatically handle clicks on the Home/Up button, so long
-		// as you specify a parent activity in AndroidManifest.xml.
-		int id = item.getItemId();
-		if (id == R.id.action_settings) {
-			return true;
-		}
-		return super.onOptionsItemSelected(item);
-	}
-
-	@Override
 	public void onTabSelected(ActionBar.Tab tab,
 			FragmentTransaction fragmentTransaction) {
 		// When the given tab is selected, switch to the corresponding page in
@@ -134,26 +117,18 @@ public class NetManagerActivity extends BaseActivity implements
 
 		public SectionsPagerAdapter(FragmentManager fm) {
 			super(fm);
+			mFragments.add(new NetAccessDetialsFragment(DataType.MOBILE, mOtl));
+			mFragments.add(new NetAccessDetialsFragment(DataType.WIFI, mOtl));
 		}
 
 		@Override
 		public Fragment getItem(int position) {
-			switch (position) {
-			case 0:
-				return new NetAccessDetialsFragment(DataType.MOBILE, mOtl);
-
-			case 1:
-				return new NetAccessDetialsFragment(DataType.WIFI, mOtl);
-			default:
-				break;
-			}
-			return null;
+			return mFragments.get(position);
 		}
 
 		@Override
 		public int getCount() {
-			// Show 2 total pages.
-			return 2;
+			return mFragments.size();
 		}
 
 		@Override
@@ -174,4 +149,11 @@ public class NetManagerActivity extends BaseActivity implements
 		this.mOtl = null;
 		// some clean up work.
 	}
+	
+	@Override
+	public void applySettingsForAll(int mode) {
+		int currentPage = mViewPager.getCurrentItem();
+		mFragments.get(currentPage).applySettingsForAll(mode);
+	}
+	
 }

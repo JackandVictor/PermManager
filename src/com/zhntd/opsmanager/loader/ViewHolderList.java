@@ -11,7 +11,6 @@ import android.widget.Switch;
 import android.widget.TextView;
 
 import com.zhntd.opsmanager.R;
-import com.zhntd.opsmanager.net.DataType;
 import com.zhntd.opsmanager.net.NetworkControlor;
 import com.zhntd.opsmanager.utils.Logger;
 
@@ -98,10 +97,10 @@ public class ViewHolderList {
 			break;
 		}
 		if (spinner != null) {
+			// update current position in spinner.
+			setCurrentSpinnerPosision(selection);
+			spinner.setSelection(selection);
 		}
-		// update current position in spinner.
-		setCurrentSpinnerPosision(selection);
-		spinner.setSelection(selection);
 	}
 
 	/**

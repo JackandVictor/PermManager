@@ -16,7 +16,6 @@ import com.zhntd.opsmanager.AppOpsState;
 import com.zhntd.opsmanager.OpsTemplate;
 import com.zhntd.opsmanager.R;
 import com.zhntd.opsmanager.loader.ViewHolderList.ItemSelectedListener;
-import com.zhntd.opsmanager.net.DataType;
 import com.zhntd.opsmanager.net.NetworkControlor;
 import com.zhntd.opsmanager.utils.Logger;
 
@@ -36,7 +35,7 @@ public class PermDetailListAdapter extends BaseAdapter implements
 	private NetworkControlor mNetworkControlor;
 
 	/* for net manager */
-	private DataType mDataType;
+	private int mDataType;
 
 	/**
 	 * @param mApps
@@ -61,7 +60,7 @@ public class PermDetailListAdapter extends BaseAdapter implements
 	 * @param dataType
 	 */
 	public PermDetailListAdapter(List<AppBean> mApps, Context context,
-			AppOpsManager appOps, OpsTemplate otl, DataType dataType) {
+			AppOpsManager appOps, OpsTemplate otl, int dataType) {
 		this(mApps, context, appOps, otl);
 		this.mDataType = dataType;
 	}
@@ -120,7 +119,7 @@ public class PermDetailListAdapter extends BaseAdapter implements
 		// For data permission control.
 		if (AppOpsState.DATA_PERMISSION == mOtl.getPermLabel()) {
 			if (mNetworkControlor == null) {
-				mNetworkControlor = NetworkControlor.prepare(mContext);
+				mNetworkControlor = NetworkControlor.get(mContext);
 			}
 			int mode = NetworkControlor.MODE_ASK;
 			switch (item) {
@@ -179,5 +178,10 @@ public class PermDetailListAdapter extends BaseAdapter implements
 		mAppOps.setMode(switchOp, appBean.getUid(), appBean.getPackageName(),
 				mode);
 		appBean.setMode(mode);
+	}
+	
+	public void refershList(List<AppBean> apps) {
+		this.mApps = apps;
+		this.notifyDataSetChanged();
 	}
 }

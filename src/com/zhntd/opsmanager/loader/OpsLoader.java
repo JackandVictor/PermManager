@@ -7,7 +7,6 @@ import java.util.concurrent.Executors;
 
 import com.zhntd.opsmanager.AppOpsState;
 import com.zhntd.opsmanager.OpsTemplate;
-import com.zhntd.opsmanager.net.DataType;
 import com.zhntd.opsmanager.net.NetworkControlor;
 import com.zhntd.opsmanager.utils.Logger;
 
@@ -77,6 +76,7 @@ public class OpsLoader {
 		case FLAG_GET_COUNT:
 			new AppsCounter(context, appOps, packageManager, otl, callback)
 					.execute();
+			break;
 
 		default:
 			break;
@@ -95,14 +95,13 @@ public class OpsLoader {
 	 */
 	public void buildAppList(Context context, AppOpsManager appOps,
 			PackageManager packageManager, OpsTemplate otl,
-			AppLoaderCallback callback, int flag, DataType dataType) {
+			AppLoaderCallback callback, int flag, int dataType) {
 
 		// special part..such as: INTERNET, we can control here.
 		if (AppOpsState.DATA_PERMISSION == otl.getPermLabel()) {
 			String permission = Manifest.permission.INTERNET;
 			new SpecialPermissionAppsLoader(permission, context,
 					packageManager, callback, dataType).execute();
-			return;
 		}
 
 	}
@@ -285,7 +284,7 @@ public class OpsLoader {
 		private String mPermission;
 		private AppLoaderCallback mCallback;
 		private Context mContext;
-		private DataType dataType;
+		private int dataType;
 
 		/**
 		 * @param mPermission
@@ -310,14 +309,15 @@ public class OpsLoader {
 		 */
 		public SpecialPermissionAppsLoader(String mPermission, Context c,
 				PackageManager packageManager, AppLoaderCallback callback,
-				DataType dataType) {
+				int dataType) {
 			this(mPermission, c, packageManager, callback);
 			this.dataType = dataType;
 		}
 
 		@Override
 		protected List<AppBean> doInBackground(Void... params) {
-			return buildGivenPermAppsList(mPermission, mPackageManager);
+			return buildGivenPermAppsList(mPermission, mPackageManager,
+					dataType, mContext);
 		}
 
 		@Override
@@ -333,56 +333,56 @@ public class OpsLoader {
 				mCallback.onAppsListLoadFinish(result, result.size());
 		}
 
-		/**
-		 * Build app list for the given permission.
-		 * 
-		 * @param permissionm
-		 * @param packageManager
-		 */
-		private List<AppBean> buildGivenPermAppsList(String permissionm,
-				PackageManager packageManager) {
-			if (packageManager == null)
-				return null;
+	}
 
-			final List<AppBean> apps = new ArrayList<AppBean>();
-			final List<ApplicationInfo> installed = packageManager
-					.getInstalledApplications(PackageManager.COMPONENT_ENABLED_STATE_DEFAULT);
+	/**
+	 * Build app list for the given permission.
+	 * 
+	 * @param permissionm
+	 * @param packageManager
+	 */
+	public static List<AppBean> buildGivenPermAppsList(String permissionm,
+			PackageManager packageManager, int dataType, Context context) {
+		if (packageManager == null)
+			return null;
 
-			for (ApplicationInfo info : installed) {
+		final List<AppBean> apps = new ArrayList<AppBean>();
+		final List<ApplicationInfo> installed = packageManager
+				.getInstalledApplications(PackageManager.COMPONENT_ENABLED_STATE_DEFAULT);
 
-				// ignore system apps
-				if (!filterApp(info))
-					continue;
+		for (ApplicationInfo info : installed) {
 
-				if (PackageManager.PERMISSION_GRANTED != packageManager
-						.checkPermission(permissionm, info.packageName)) {
-					continue;
-				}
-				// let's go.
-				final AppBean app = new AppBean();
-				final String label = info.loadLabel(mPackageManager).toString();
-				final String displayName = label != null ? label
-						: info.packageName;
-				app.setDisplayName(displayName);
-				app.setDisplayIcon(info.loadIcon(mPackageManager));
-				app.setUid(info.uid);
-				app.setPackageName(info.packageName);
-				// time to get mode.
-				if (Manifest.permission.INTERNET.equals(mPermission)) {
-					// load data control operation mode.
-					if (mNetworkControlor == null)
-						mNetworkControlor = NetworkControlor.prepare(mContext);
-					int uid = info.uid;
-					int mode = mNetworkControlor.getCurrentMode(uid, mContext,
-							dataType);
-					app.setMode(mode);
-					Logger.logger("OpsLOader: get a mode frm db:" + mode);
-				}
-				// finally we can add to the list.
-				apps.add(app);
+			// ignore system apps
+			if (!filterApp(info))
+				continue;
+
+			if (PackageManager.PERMISSION_GRANTED != packageManager
+					.checkPermission(permissionm, info.packageName)) {
+				continue;
 			}
-			return apps;
+			// let's go.
+			final AppBean app = new AppBean();
+			final String label = info.loadLabel(packageManager).toString();
+			final String displayName = label != null ? label : info.packageName;
+			app.setDisplayName(displayName);
+			app.setDisplayIcon(info.loadIcon(packageManager));
+			app.setUid(info.uid);
+			app.setPackageName(info.packageName);
+			// time to get mode.
+			if (Manifest.permission.INTERNET.equals(permissionm)) {
+				// load data control operation mode.
+				if (mNetworkControlor == null)
+					mNetworkControlor = NetworkControlor.get(context);
+				int uid = info.uid;
+				int mode = mNetworkControlor.getCurrentMode(uid, context,
+						dataType);
+				app.setMode(mode);
+				Logger.logger("OpsLOader: get a mode frm db:" + mode);
+			}
+			// finally we can add to the list.
+			apps.add(app);
 		}
+		return apps;
 	}
 
 	/**

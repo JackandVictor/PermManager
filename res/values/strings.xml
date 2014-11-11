@@ -7,6 +7,13 @@
     <string name="title_activity_net_manager">NetManager</string>
     <string name="title_section1">Mobile</string>
     <string name="title_section2">WIFI</string>
-    <string name="action_settings">Settings</string>
+    <string name="action_ask_all">Ask all</string>
+    <string name="action_deny_all">Deny all</string>
+    <string name="action_allow_all">Allow all</string>
+    <string name="dialog_title_list_loading">Tips</string>
+    <string name="dialog_content_list_loading">Loading</string>
+    <string name="dialog_title_handling">Tips</string>
+    <string name="dialog_content_handling">Working</string>
+    <string name="work_done_success">Work done</string>
 
 </resources>

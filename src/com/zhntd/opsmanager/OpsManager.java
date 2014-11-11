@@ -30,6 +30,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -41,9 +42,10 @@ import android.widget.AdapterView.OnItemClickListener;
 import com.zhntd.opsmanager.R;
 import com.zhntd.opsmanager.activity.BaseActivity;
 import com.zhntd.opsmanager.activity.NetManagerActivity;
-import com.zhntd.opsmanager.activity.OpsDetails;
+import com.zhntd.opsmanager.activity.OpsDetailsActivity;
 import com.zhntd.opsmanager.loader.SummaryListAdapter;
 import com.zhntd.opsmanager.loader.OpsLoader;
+import com.zhntd.opsmanager.net.NetworkControlor;
 import com.zhntd.opsmanager.utils.Logger;
 
 public class OpsManager extends BaseActivity implements OnItemClickListener {
@@ -187,6 +189,8 @@ public class OpsManager extends BaseActivity implements OnItemClickListener {
 				null);
 		setContentView(mListView);
 		inflateList();
+		// prepare
+		NetworkControlor.prepare(this);
 	}
 
 	/**
@@ -215,7 +219,7 @@ public class OpsManager extends BaseActivity implements OnItemClickListener {
 			}
 			// Okay to show sth now.
 			final Class<?> clz = otl.getPermLabel() == AppOpsState.DATA_PERMISSION ? NetManagerActivity.class
-					: OpsDetails.class;
+					: OpsDetailsActivity.class;
 			final Intent intent = new Intent(OpsManager.this, clz);
 			final Bundle bundle = new Bundle();
 			bundle.putSerializable(KEY_OTL, otl);
@@ -227,10 +231,21 @@ public class OpsManager extends BaseActivity implements OnItemClickListener {
 	}
 
 	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		return false;
+	}
+
+	@Override
 	public void cleanUp() {
 		this.mListView = null;
 		this.mOpsCate = null;
 		this.mOpsLabels = null;
 		this.mOpsList = null;
+	}
+
+	@Override
+	public void applySettingsForAll(int mode) {
+		// TODO Auto-generated method stub
+
 	}
 }

@@ -1,16 +1,30 @@
 package com.zhntd.opsmanager.net;
 
+import java.util.List;
+
+import android.Manifest;
+import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
+import android.os.AsyncTask;
+import android.os.IBinder;
+import android.os.RemoteException;
 
+import com.zhntd.opsmanager.loader.AppBean;
+import com.zhntd.opsmanager.loader.OpsLoader;
 import com.zhntd.opsmanager.loader.ThreadPoolManager;
 import com.zhntd.opsmanager.loader.ThreadPoolTask;
 import com.zhntd.opsmanager.provider.DataBaseCreator;
+import com.zhntd.opsmanager.service.PermManagerService;
 import com.zhntd.opsmanager.utils.Logger;
+import com.zhntd.opsmanager.service.IPermManagerService;
 
 /**
  * Control data activities of the given application.
@@ -21,11 +35,33 @@ import com.zhntd.opsmanager.utils.Logger;
  */
 public class NetworkControlor {
 
+	public class DataType {
+		public static final int MOBILE = 0;
+		public static final int WIFI = 1;
+	}
+
 	public class EffectiveTask extends ThreadPoolTask {
 
 		private Work work;
 		private int mode;
 		private Context context;
+		private WorkFinishedCallback mCallback;
+
+		/**
+		 * For apply all.
+		 * 
+		 * @param callback
+		 * @param mode
+		 * @param dataType
+		 */
+		public EffectiveTask(WorkFinishedCallback callback, int mode,
+				int dataType, Context context) {
+			super(null, null, dataType);
+			this.mode = mode;
+			this.mCallback = callback;
+			this.context = context;
+			this.work = Work.APPLY_ALL;
+		}
 
 		/**
 		 * @param uid
@@ -34,12 +70,28 @@ public class NetworkControlor {
 		 * @param work
 		 * @param mode
 		 */
-		public EffectiveTask(String uid, String packageName, DataType dataType,
+		public EffectiveTask(String uid, String packageName, int dataType,
 				Work work, int mode, Context context) {
 			super(uid, packageName, dataType);
 			this.work = work;
 			this.mode = mode;
 			this.context = context;
+		}
+
+		/**
+		 * @param uid
+		 * @param packageName
+		 * @param dataType
+		 * @param work
+		 * @param mode
+		 * @param context
+		 * @param callback
+		 */
+		public EffectiveTask(String uid, String packageName, int dataType,
+				Work work, int mode, Context context,
+				WorkFinishedCallback callback) {
+			this(uid, packageName, dataType, work, mode, context);
+			this.mCallback = callback;
 		}
 
 		@Override
@@ -51,11 +103,30 @@ public class NetworkControlor {
 			if (work == Work.SET_CURRENT_MODE)
 				setCurrentMode(Integer.parseInt(uid), packageName, mode,
 						dataType, context);
+			if (work == Work.APPLY_ALL)
+				applyRulesForAll(mCallback, mode, dataType, context);
+			// do something here.
+			if (mCallback != null)
+				mCallback.onWorkDone();
 		}
 	}
 
+	/**
+	 * May be implements.
+	 * 
+	 */
+	public interface WorkFinishedCallback {
+		abstract void onWorkDone();
+
+		abstract void onWorkPrepare();
+	}
+
+	/**
+	 * What kind of work in effective task.
+	 * 
+	 */
 	public enum Work {
-		WRITE_TO_SPF, DELETE_FRM_SPF, SET_CURRENT_MODE,
+		WRITE_TO_SPF, DELETE_FRM_SPF, SET_CURRENT_MODE, APPLY_ALL;
 	}
 
 	private ThreadPoolManager mPoolManager;
@@ -68,14 +139,32 @@ public class NetworkControlor {
 	public static final int MODE_ALLOWED = 0;
 	public static final int MODE_DENIED = 1;
 
+	private IPermManagerService mPermManagerService;
+
 	private static final NetworkControlor mControlor = new NetworkControlor();
 
 	/**
+	 * This should not be called in a UI thread.
+	 * 
 	 * @param context
 	 * @return
 	 */
 	public static NetworkControlor prepare(Context context) {
 		return mControlor.initialize(context);
+	}
+
+	/**
+	 * Call prepare first.
+	 * 
+	 * @param context
+	 * @return
+	 */
+	public static NetworkControlor get(Context context) {
+		if (mControlor.mPermManagerService == null) {
+			Logger.logger("INVALID usage of NetworkControlor, Call prepare() first!");
+			return prepare(context);
+		}
+		return mControlor;
 	}
 
 	/**
@@ -86,12 +175,45 @@ public class NetworkControlor {
 		if (mControlor.mPreferences == null)
 			mControlor.mPreferences = context.getSharedPreferences(
 					Api.PREFS_NAME, 0);
+
 		if (mControlor.mEditor == null)
 			mControlor.mEditor = mPreferences.edit();
-		if (mPoolManager == null)
-			mPoolManager = new ThreadPoolManager(ThreadPoolManager.TYPE_FIFO, 5);
+
+		if (mControlor.mPoolManager == null)
+			mControlor.mPoolManager = new ThreadPoolManager(
+					ThreadPoolManager.TYPE_FIFO, 5);
 		mPoolManager.start();
+
+		if (mControlor.mPermManagerService == null)
+			bindPermService(context);
+
 		return mControlor;
+	}
+
+	private ServiceConnection mServiceConnection = new ServiceConnection() {
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+			mControlor.mPermManagerService = null;
+		}
+
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			mControlor.mPermManagerService = IPermManagerService.Stub
+					.asInterface(service);
+			if (mControlor.mPermManagerService == null)
+				Logger.logger("Failed to bind service...");
+		}
+	};
+
+	private void bindPermService(Context context) {
+		final Intent intent = new Intent();
+		intent.setClass(context, PermManagerService.class);
+		context.bindService(intent, mServiceConnection,
+				Context.BIND_AUTO_CREATE);
+	}
+
+	public void onQuit(Context context) {
+		context.unbindService(mServiceConnection);
 	}
 
 	/**
@@ -99,7 +221,7 @@ public class NetworkControlor {
 	 * @param type
 	 * @return
 	 */
-	public void writeToSpfAsync(String uid, DataType type, Context context) {
+	public void writeToSpfAsync(String uid, int type, Context context) {
 		mPoolManager.addAsyncTask(new EffectiveTask(uid, null, type,
 				Work.WRITE_TO_SPF, -1, context));
 	}
@@ -109,13 +231,13 @@ public class NetworkControlor {
 	 * @param type
 	 * @return
 	 */
-	public void deleteFrmSpfAsync(String uid, DataType type, Context context) {
+	public void deleteFrmSpfAsync(String uid, int type, Context context) {
 		mPoolManager.addAsyncTask(new EffectiveTask(uid, null, type,
 				Work.DELETE_FRM_SPF, -1, context));
 	}
 
 	public void setCurrentModeAsync(int uid, String packageName, int mode,
-			DataType dataType, Context context) {
+			int dataType, Context context) {
 		mPoolManager.addAsyncTask(new EffectiveTask(String.valueOf(uid),
 				packageName, dataType, Work.SET_CURRENT_MODE, mode, context));
 	}
@@ -125,7 +247,7 @@ public class NetworkControlor {
 	 * @param type
 	 * @return
 	 */
-	private synchronized boolean writeToSpf(String uid, DataType type) {
+	private synchronized boolean writeToSpf(String uid, int type) {
 		String uids = mPreferences.getString(Api.PREF_WIFI_UIDS, "");
 		uids = uids + "|" + uid;
 		if (DataType.MOBILE == type)
@@ -140,7 +262,7 @@ public class NetworkControlor {
 	 * @param type
 	 * @return
 	 */
-	public synchronized boolean deleteFrmSpf(String uid, DataType type) {
+	public synchronized boolean deleteFrmSpf(String uid, int type) {
 		String valueString = "";
 		String[] values = new String[100];
 		String newUids = "";
@@ -174,19 +296,30 @@ public class NetworkControlor {
 
 	/**
 	 * @param uid
-	 * @return
+	 * @param context
+	 * @param dataType
+	 * @return mode
 	 */
-	public int getCurrentMode(int uid, Context context, DataType dataType) {
+	public int getCurrentMode(int uid, Context context, int dataType) {
 		DataBaseCreator dataBaseCreator = null;
 		SQLiteDatabase sqLiteDatabase = null;
 		Cursor cursor = null;
 		try {
-			dataBaseCreator = new DataBaseCreator(context,
-					DataBaseCreator.DATABASE_NAME, null,
-					DataBaseCreator.DATA_BASE_VERSION);
+			String tableName, dbName;
+			if (dataType == DataType.MOBILE) {
+				tableName = DataBaseCreator.TABLE_NAME_MOBILE;
+				dbName = DataBaseCreator.DATABASE_NAME_MOBILE;
+			} else {
+				tableName = DataBaseCreator.TABLE_NAME_WIFI;
+				dbName = DataBaseCreator.DATABASE_NAME_WIFI;
+			}
+			Logger.logger("dataType:---------->" + dataType);
+
+			dataBaseCreator = new DataBaseCreator(context, dbName, null,
+					DataBaseCreator.DATA_BASE_VERSION, tableName);
 			sqLiteDatabase = dataBaseCreator.getWritableDatabase();
-			cursor = sqLiteDatabase.query(DataBaseCreator.TABLE_NAME, null,
-					"UID=" + uid, null, null, null, "PACKAGENAME DESC");
+			cursor = sqLiteDatabase.query(tableName, null, "UID=" + uid, null,
+					null, null, "PACKAGENAME DESC");
 			cursor.moveToFirst();
 
 			if (cursor.getCount() > 0) {
@@ -206,6 +339,11 @@ public class NetworkControlor {
 			Logger.logger("ERROR when query db, starting clean up...");
 			cleanUp(dataBaseCreator, sqLiteDatabase, cursor);
 			return MODE_ASK;
+		} catch (SQLiteException e) {
+			e.printStackTrace();
+			Logger.logger("ERROR when query db, starting clean up...");
+			cleanUp(dataBaseCreator, sqLiteDatabase, cursor);
+			return MODE_ASK;
 		} finally {
 			cleanUp(dataBaseCreator, sqLiteDatabase, cursor);
 		}
@@ -216,7 +354,7 @@ public class NetworkControlor {
 	 * @return
 	 */
 	private synchronized boolean setCurrentMode(int uid, String packageName,
-			int mode, DataType dataType, Context context) {
+			int mode, int dataType, Context context) {
 
 		// first we apply the iptable.
 		if (mode == NetworkControlor.MODE_DENIED) {
@@ -228,21 +366,27 @@ public class NetworkControlor {
 		applySavedIptablesRules(context, true);
 
 		// try to delete first.
-		deleteFrmDb(packageName, uid, context);
+		deleteFrmDb(packageName, uid, dataType, context);
 		// now insert.
 		DataBaseCreator dataBaseCreator = null;
 		SQLiteDatabase sqLiteDatabase = null;
 		try {
-			dataBaseCreator = new DataBaseCreator(context,
-					DataBaseCreator.DATABASE_NAME, null,
-					DataBaseCreator.DATA_BASE_VERSION);
+			String tableName, dbName;
+			if (dataType == DataType.MOBILE) {
+				tableName = DataBaseCreator.TABLE_NAME_MOBILE;
+				dbName = DataBaseCreator.DATABASE_NAME_MOBILE;
+			} else {
+				tableName = DataBaseCreator.TABLE_NAME_WIFI;
+				dbName = DataBaseCreator.DATABASE_NAME_WIFI;
+			}
+			dataBaseCreator = new DataBaseCreator(context, dbName, null,
+					DataBaseCreator.DATA_BASE_VERSION, tableName);
 			sqLiteDatabase = dataBaseCreator.getWritableDatabase();
 			final ContentValues values = new ContentValues();
 			values.put("PACKAGENAME", packageName);
 			values.put("UID", uid);
 			values.put("MODE", mode);
-			long id = sqLiteDatabase.insert(DataBaseCreator.TABLE_NAME, null,
-					values);
+			long id = sqLiteDatabase.insert(tableName, null, values);
 			if (id == -1) {
 				Logger.logger("ERROR when insert to db...");
 				return false;
@@ -257,6 +401,11 @@ public class NetworkControlor {
 			Logger.logger("ERROR when insert to db, starting clean up...");
 			cleanUp(dataBaseCreator, sqLiteDatabase, null);
 			return false;
+		} catch (SQLiteException e) {
+			e.printStackTrace();
+			Logger.logger("ERROR when query db, starting clean up...");
+			cleanUp(dataBaseCreator, sqLiteDatabase, null);
+			return false;
 		} finally {
 			cleanUp(dataBaseCreator, sqLiteDatabase, null);
 		}
@@ -267,16 +416,24 @@ public class NetworkControlor {
 	 * @param uid
 	 * @return
 	 */
-	private int deleteFrmDb(String packageName, int uid, Context context) {
+	private int deleteFrmDb(String packageName, int uid, int dataType,
+			Context context) {
 		DataBaseCreator dataBaseCreator = null;
 		SQLiteDatabase sqLiteDatabase = null;
 		try {
-			dataBaseCreator = new DataBaseCreator(context,
-					DataBaseCreator.DATABASE_NAME, null,
-					DataBaseCreator.DATA_BASE_VERSION);
+			String tableName, dbName;
+			if (dataType == DataType.MOBILE) {
+				tableName = DataBaseCreator.TABLE_NAME_MOBILE;
+				dbName = DataBaseCreator.DATABASE_NAME_MOBILE;
+			} else {
+				tableName = DataBaseCreator.TABLE_NAME_WIFI;
+				dbName = DataBaseCreator.DATABASE_NAME_WIFI;
+			}
+			dataBaseCreator = new DataBaseCreator(context, dbName, null,
+					DataBaseCreator.DATA_BASE_VERSION, tableName);
 			sqLiteDatabase = dataBaseCreator.getWritableDatabase();
-			int rows = sqLiteDatabase.delete(DataBaseCreator.TABLE_NAME,
-					"UID=?", new String[] { uid + "" });
+			int rows = sqLiteDatabase.delete(tableName, "UID=?",
+					new String[] { uid + "" });
 			Logger.logger("Deleted frm db, package:" + packageName
 					+ "total rows count:" + rows);
 			return rows;
@@ -307,6 +464,50 @@ public class NetworkControlor {
 				cursor.close();
 		} catch (Exception e) {
 			Logger.logger("ERROR when clean up the db...");
+		}
+	}
+
+	/**
+	 * @param callback
+	 * @param mode
+	 * @param dataType
+	 * @param context
+	 */
+	public void applyRulesForAllAsync(final WorkFinishedCallback callback,
+			final int mode, final int dataType, final Context context) {
+		new AsyncTask<Void, Void, Void>() {
+
+			@Override
+			protected Void doInBackground(Void... arg0) {
+				applyRulesForAll(callback, mode, dataType, context);
+				return null;
+			}
+
+			protected void onPreExecute() {
+				callback.onWorkPrepare();
+			}
+
+			protected void onPostExecute(Void result) {
+				callback.onWorkDone();
+			}
+
+		}.execute();
+	}
+
+	/**
+	 * @param callback
+	 * @param mode
+	 * @param dataType
+	 * @param context
+	 */
+	private void applyRulesForAll(WorkFinishedCallback callback, int mode,
+			int dataType, Context context) {
+		String permission = Manifest.permission.INTERNET;
+		final List<AppBean> apps = OpsLoader.buildGivenPermAppsList(permission,
+				context.getPackageManager(), dataType, context);
+		for (AppBean app : apps) {
+			setCurrentMode(app.getUid(), app.getPackageName(), mode, dataType,
+					context);
 		}
 	}
 
